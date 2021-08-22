@@ -20,9 +20,10 @@ class Titlee extends StatelessWidget {
               title,
               style: const TextStyle(
                 fontFamily: 'IBM Plex Sans',
-                fontSize: 20,
+                fontStyle: FontStyle.italic,
+                fontSize: 23,
                 color: Colors.white,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ],

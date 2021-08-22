@@ -1,14 +1,14 @@
 import 'package:aidar_zakaz/controllers/home_screen_controller.dart';
-import 'package:aidar_zakaz/models/listview_item_model.dart';
-import 'package:aidar_zakaz/utils/colors.dart';
 import 'package:aidar_zakaz/widgets/detail_listview_item.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class CategoryDetailScreen extends GetView<HomeScreenController> {
-  const CategoryDetailScreen(this.item, {Key? key}) : super(key: key);
-  final ListviewItemModel item;
+  const CategoryDetailScreen(this.title, this.url, {Key? key})
+      : super(key: key);
+  final String title;
+  final String url;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,12 +60,15 @@ class CategoryDetailScreen extends GetView<HomeScreenController> {
                       width: 220,
                       height: 220,
                       decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: NetworkImage(
-                            item.url,
-                          ),
-                          fit: BoxFit.cover,
-                        ),
+                        image: url.contains('http')
+                            ? DecorationImage(
+                                image: NetworkImage(url),
+                                fit: BoxFit.fill,
+                              )
+                            : DecorationImage(
+                                image: AssetImage(url),
+                                fit: BoxFit.fill,
+                              ),
                       ),
                     ),
                     const SizedBox(
@@ -78,7 +81,7 @@ class CategoryDetailScreen extends GetView<HomeScreenController> {
               Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
                 child: Text(
-                  item.title,
+                  title,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontFamily: 'Inter',
@@ -91,15 +94,22 @@ class CategoryDetailScreen extends GetView<HomeScreenController> {
               const SizedBox(
                 height: 30,
               ),
-              TextButton.icon(
-                  onPressed: () {},
-                  icon: Icon(Icons.play_circle),
-                  label: Icon(Icons.shuffle)),
+              Row(
+                children: const [
+                  Icon(Icons.play_circle),
+                  SizedBox(
+                    width: 20,
+                  ),
+                  Icon(Icons.shuffle)
+                ],
+                mainAxisSize: MainAxisSize.min,
+              ),
               const SizedBox(
                 height: 20,
               ),
               ListView.builder(
                 shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 itemBuilder: (_, index) =>
                     DetailListviewItem(controller.items[index]),
@@ -109,20 +119,20 @@ class CategoryDetailScreen extends GetView<HomeScreenController> {
           ),
         ),
       ),
-      bottomSheet: GetBuilder<HomeScreenController>(
-        builder: (_) {
-          return Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color.fromRGBO(18, 18, 18, 1),
-              border: Border.all(color: Colors.black, width: 1),
-              borderRadius: BorderRadius.circular(0),
-            ),
-            height: !controller.isShowing ? 0 : 50,
-            child: Text('asdadsadadad'),
-          );
-        },
-      ),
+      // bottomSheet: GetBuilder<HomeScreenController>(
+      //   builder: (_) {
+      //     return Container(
+      //       width: double.infinity,
+      //       decoration: BoxDecoration(
+      //         color: const Color.fromRGBO(18, 18, 18, 1),
+      //         border: Border.all(color: Colors.black, width: 1),
+      //         borderRadius: BorderRadius.circular(0),
+      //       ),
+      //       height: !controller.isShowing ? 0 : 50,
+      //       child: Text('asdadsadadad'),
+      //     );
+      //   },
+      // ),
     );
   }
 }

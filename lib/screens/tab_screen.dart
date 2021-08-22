@@ -5,13 +5,15 @@ import 'package:aidar_zakaz/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'library/library_screen.dart';
+
 class TabScreen extends GetView<TabScreenController> {
   TabScreen({Key? key}) : super(key: key);
 
   final List<Widget> _widgetOptions = <Widget>[
     const HomeScreen(),
     const SearchScreen(),
-    // YourLibraryScreen(),
+    const LibraryScreen(),
     // PremiumScreen(),
   ];
 
@@ -28,7 +30,7 @@ class TabScreen extends GetView<TabScreenController> {
                     Colorss.primary,
                     Colorss.dark,
                   ],
-                  center: Alignment(-1, -2.2),
+                  center: Alignment(-1, -2.3),
                   radius: 1.5,
                 ),
               ),

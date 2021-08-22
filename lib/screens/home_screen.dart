@@ -1,7 +1,9 @@
 import 'package:aidar_zakaz/controllers/home_screen_controller.dart';
 import 'package:aidar_zakaz/widgets/home_listview_shahe_widget.dart';
 import 'package:aidar_zakaz/widgets/home_listview_widget.dart';
+import 'package:aidar_zakaz/widgets/popular_listview_widget.dart';
 import 'package:aidar_zakaz/widgets/title.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -18,8 +20,16 @@ class HomeScreen extends GetView<HomeScreenController> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text(
+                  'السلام عليك ورحمة الله',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                ),
                 const Titlee('Популярные категории'),
-                ListViewWidget(controller.items),
+                PopularListViewWidget(controller.itemsPopular),
                 const SizedBox(
                   height: 20,
                 ),

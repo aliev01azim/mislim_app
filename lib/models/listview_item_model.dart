@@ -4,7 +4,7 @@ class ListviewItemModel {
   bool? isFavorite;
   late final String title;
   late final String url;
-  late final String thumbnailUrl;
+  late final String audioUrl;
 
   ListviewItemModel(
       {this.id,
@@ -12,7 +12,7 @@ class ListviewItemModel {
       required this.isFavorite,
       required this.title,
       required this.url,
-      required this.thumbnailUrl});
+      required this.audioUrl});
 
   ListviewItemModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -20,7 +20,7 @@ class ListviewItemModel {
     name = json['name'];
     title = json['title'];
     url = json['url'];
-    thumbnailUrl = json['thumbnailUrl'];
+    audioUrl = json['audioUrl'];
   }
 
   Map<String, dynamic> toJson() {
@@ -30,7 +30,7 @@ class ListviewItemModel {
     data['name'] = name;
     data['title'] = title;
     data['url'] = url;
-    data['thumbnailUrl'] = thumbnailUrl;
+    data['audioUrl'] = audioUrl;
     return data;
   }
 }

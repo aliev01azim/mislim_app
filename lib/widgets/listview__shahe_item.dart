@@ -16,7 +16,7 @@ class ListviewShaheItem extends StatelessWidget {
         child: Column(
           children: [
             Expanded(
-              child: SvgPicture.asset(item.isMale ? Images.man : Images.woman),
+              child: SvgPicture.asset(Images.man),
             ),
             Text(
               item.name,
