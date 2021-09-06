@@ -1,22 +1,28 @@
-import 'package:aidar_zakaz/models/listview_item_model.dart';
+import 'package:aidar_zakaz/models/category_model.dart';
 import 'package:aidar_zakaz/widgets/listview_item.dart';
 import 'package:flutter/material.dart';
 
 class ListViewWidget extends StatelessWidget {
-  const ListViewWidget(this.items, {Key? key}) : super(key: key);
-  final List<ListviewItemModel> items;
+  const ListViewWidget(this.items, this.withIcon, {Key? key}) : super(key: key);
+  final List<CategoryModel> items;
+  final bool withIcon;
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 202,
-      width: double.infinity,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.only(left: 10),
-        controller: ScrollController(),
-        itemCount: items.length,
-        itemBuilder: (_, index) => ListviewItem(items[index]),
+    return Column(children: [
+      SizedBox(
+        height: items.isNotEmpty ? 239 : 60,
+        width: double.infinity,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.only(left: 10),
+          controller: ScrollController(),
+          itemCount: items.length,
+          itemBuilder: (_, index) => ListviewItem(items[index], withIcon),
+        ),
       ),
-    );
+      const SizedBox(
+        height: 20,
+      ),
+    ]);
   }
 }

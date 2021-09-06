@@ -1,12 +1,12 @@
 import 'package:aidar_zakaz/controllers/item_detail_controller.dart';
-import 'package:aidar_zakaz/models/listview_item_model.dart';
+import 'package:aidar_zakaz/models/lecture_model.dart';
 import 'package:aidar_zakaz/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class ItemDetailScreen extends GetView<ItemDetailController> {
   const ItemDetailScreen(this.item, {Key? key}) : super(key: key);
-  final ListviewItemModel item;
+  final LectureModel item;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,9 +18,10 @@ class ItemDetailScreen extends GetView<ItemDetailController> {
             child: Stack(
               children: [
                 Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage(item.url),
+                      image: NetworkImage(
+                          'https://img5.goodfon.ru/wallpaper/nbig/b/11/gorod-vecher-mechet-arkhitektura-religiia-oae-kupola-mechet.jpg'),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -89,7 +90,8 @@ class ItemDetailScreen extends GetView<ItemDetailController> {
                         height: 6.0,
                       ),
                       Text(
-                        item.name,
+                        // item.name,
+                        'asd',
                         textAlign: TextAlign.start,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -137,7 +139,7 @@ class ItemDetailScreen extends GetView<ItemDetailController> {
                     padding: const EdgeInsets.all(8.0),
                     child: IconButton(
                       onPressed: () {
-                        controller.playMusic(item.audioUrl);
+                        controller.playMusic(item.lecture_file);
                         if (controller.isPlaying) {
                           controller.audioPlayer.pause();
                           // setState(() {

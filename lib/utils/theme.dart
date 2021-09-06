@@ -1,4 +1,3 @@
-import 'package:aidar_zakaz/utils/custom_route.dart';
 import 'package:flutter/material.dart';
 
 import 'colors.dart';
@@ -47,23 +46,23 @@ ThemeData _buildDefaultTheme() {
   );
 }
 
-TextTheme _buildDefaultTextTheme() {
-  return const TextTheme(
-    button: TextStyle(
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0.5,
-        color: Colors.white,
-        fontSize: 16),
-    // slider title
+// TextTheme _buildDefaultTextTheme() {
+//   return const TextTheme(
+//     button: TextStyle(
+//         fontWeight: FontWeight.bold,
+//         letterSpacing: 0.5,
+//         color: Colors.white,
+//         fontSize: 16),
+//     // slider title
 
-    // addCardScreen text
+//     // addCardScreen text
 
-    // logo snizu
+//     // logo snizu
 
-    // defaultBodyText
+//     // defaultBodyText
 
-    // form input values style
+//     // form input values style
 
-    // slider body text
-  );
-}
+//     // slider body text
+//   );
+// }

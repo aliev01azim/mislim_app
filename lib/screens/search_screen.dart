@@ -1,10 +1,11 @@
 import 'package:aidar_zakaz/bindings/poisk_screen_binding.dart';
+import 'package:aidar_zakaz/controllers/poisk_controller.dart';
 import 'package:aidar_zakaz/screens/poisk_screen.dart';
 import 'package:aidar_zakaz/widgets/look_grid_item.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class SearchScreen extends StatelessWidget {
+class SearchScreen extends GetView<PoiskController> {
   const SearchScreen({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {

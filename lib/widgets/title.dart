@@ -21,7 +21,7 @@ class Titlee extends StatelessWidget {
               style: const TextStyle(
                 fontFamily: 'IBM Plex Sans',
                 fontStyle: FontStyle.italic,
-                fontSize: 23,
+                fontSize: 21,
                 color: Colors.white,
                 fontWeight: FontWeight.w800,
               ),
@@ -29,7 +29,7 @@ class Titlee extends StatelessWidget {
           ],
         ),
         const SizedBox(
-          height: 20,
+          height: 25,
         ),
       ],
       crossAxisAlignment: CrossAxisAlignment.stretch,

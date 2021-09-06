@@ -1,13 +1,14 @@
 import 'package:aidar_zakaz/controllers/home_screen_controller.dart';
-import 'package:aidar_zakaz/models/category_model.dart';
-import 'package:aidar_zakaz/widgets/detail_listview_item.dart';
+import 'package:aidar_zakaz/models/shahe_model.dart';
+import 'package:aidar_zakaz/utils/colors.dart';
+import 'package:aidar_zakaz/widgets/shahe_detail_listview_item.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class CategoryDetailScreen extends GetView<HomeScreenController> {
-  const CategoryDetailScreen(this.category, {Key? key}) : super(key: key);
-  final CategoryModel category;
+class CategoryShaheDetailScreen extends GetView<HomeScreenController> {
+  const CategoryShaheDetailScreen(this.shahe, {Key? key}) : super(key: key);
+  final ShaheModel shahe;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,9 +23,8 @@ class CategoryDetailScreen extends GetView<HomeScreenController> {
                     GetBuilder<HomeScreenController>(
                       builder: (_) {
                         return IconButton(
-                          onPressed: () =>
-                              controller.addFavoriteCategory(category),
-                          icon: category.isFavorite!
+                          onPressed: () => controller.addFavoriteShahes(shahe),
+                          icon: shahe.isFavorite!
                               ? const Icon(
                                   Icons.favorite,
                                   size: 30,
@@ -43,7 +43,7 @@ class CategoryDetailScreen extends GetView<HomeScreenController> {
                 )
               ],
               elevation: 0,
-              backgroundColor: const Color.fromRGBO(29, 185, 84, 0.5),
+              backgroundColor: Colorss.dark,
               pinned: false,
               floating: true,
               forceElevated: innerBoxIsScrolled,
@@ -53,48 +53,10 @@ class CategoryDetailScreen extends GetView<HomeScreenController> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: FractionalOffset.bottomCenter,
-                    colors: [
-                      Color.fromRGBO(29, 185, 84, 0.5),
-                      Color.fromRGBO(158, 196, 209, 0),
-                    ],
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      height: 27,
-                    ),
-                    Container(
-                      width: 220,
-                      height: 220,
-                      decoration: BoxDecoration(
-                        image: category.url.contains('http')
-                            ? DecorationImage(
-                                image: NetworkImage(category.url),
-                                fit: BoxFit.fill,
-                              )
-                            : DecorationImage(
-                                image: AssetImage(category.url),
-                                fit: BoxFit.fill,
-                              ),
-                      ),
-                    ),
-                    const SizedBox(
-                      width: double.infinity,
-                      height: 15,
-                    ),
-                  ],
-                ),
-              ),
               Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
                 child: Text(
-                  category.name,
+                  shahe.name,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -107,27 +69,15 @@ class CategoryDetailScreen extends GetView<HomeScreenController> {
                 ),
               ),
               const SizedBox(
-                height: 20,
+                height: 30,
               ),
               Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.play_circle,
-                      size: 30,
-                    ),
-                    onPressed: () {},
-                  ),
-                  const SizedBox(
+                children: const [
+                  Icon(Icons.play_circle),
+                  SizedBox(
                     width: 20,
                   ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.shuffle,
-                      size: 30,
-                    ),
-                    onPressed: () {},
-                  )
+                  Icon(Icons.shuffle)
                 ],
                 mainAxisSize: MainAxisSize.min,
               ),
@@ -139,7 +89,7 @@ class CategoryDetailScreen extends GetView<HomeScreenController> {
                 physics: const NeverScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 itemBuilder: (_, index) =>
-                    DetailListviewItem(controller.items[index], category),
+                    ShaheDetailListviewItem(controller.items[index]),
                 itemCount: controller.items.length,
               ),
             ],
