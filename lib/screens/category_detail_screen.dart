@@ -1,3 +1,4 @@
+import 'package:aidar_zakaz/controllers/category_detail_controller.dart';
 import 'package:aidar_zakaz/controllers/home_screen_controller.dart';
 import 'package:aidar_zakaz/models/category_model.dart';
 import 'package:aidar_zakaz/widgets/detail_listview_item.dart';
@@ -5,7 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class CategoryDetailScreen extends GetView<HomeScreenController> {
+class CategoryDetailScreen extends GetView<CategoryDetailController> {
   const CategoryDetailScreen(this.category, {Key? key}) : super(key: key);
   final CategoryModel category;
   @override
@@ -20,10 +21,10 @@ class CategoryDetailScreen extends GetView<HomeScreenController> {
                 Row(
                   children: [
                     GetBuilder<HomeScreenController>(
-                      builder: (_) {
+                      builder: (homeController) {
                         return IconButton(
                           onPressed: () =>
-                              controller.addFavoriteCategory(category),
+                              homeController.addFavoriteCategory(category),
                           icon: category.isFavorite!
                               ? const Icon(
                                   Icons.favorite,
@@ -73,16 +74,10 @@ class CategoryDetailScreen extends GetView<HomeScreenController> {
                       width: 220,
                       height: 220,
                       decoration: BoxDecoration(
-                        image: category.url.contains('http')
-                            ? DecorationImage(
-                                image: NetworkImage(category.url),
-                                fit: BoxFit.fill,
-                              )
-                            : DecorationImage(
-                                image: AssetImage(category.url),
-                                fit: BoxFit.fill,
-                              ),
-                      ),
+                          image: DecorationImage(
+                        image: NetworkImage(category.image),
+                        fit: BoxFit.fill,
+                      )),
                     ),
                     const SizedBox(
                       width: double.infinity,
@@ -94,7 +89,7 @@ class CategoryDetailScreen extends GetView<HomeScreenController> {
               Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
                 child: Text(
-                  category.name,
+                  category.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -134,13 +129,22 @@ class CategoryDetailScreen extends GetView<HomeScreenController> {
               const SizedBox(
                 height: 20,
               ),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                itemBuilder: (_, index) =>
-                    DetailListviewItem(controller.items[index], category),
-                itemCount: controller.items.length,
+              GetBuilder<CategoryDetailController>(
+                initState: (_) => controller.fetchLecOfCategories(category.id),
+                builder: (_) {
+                  return controller.isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          itemBuilder: (_, index) => DetailListviewItem(
+                              controller.lecturesC[index], category),
+                          itemCount: controller.lecturesC.length,
+                        );
+                },
               ),
             ],
           ),

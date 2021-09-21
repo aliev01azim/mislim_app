@@ -10,7 +10,7 @@ class ListViewWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(children: [
       SizedBox(
-        height: items.isNotEmpty ? 239 : 60,
+        height: 239,
         width: double.infinity,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,

@@ -1,19 +1,20 @@
-import 'package:aidar_zakaz/bindings/item_detail_screen_binding.dart';
-import 'package:aidar_zakaz/controllers/home_screen_controller.dart';
+import 'package:aidar_zakaz/controllers/category_detail_controller.dart';
 import 'package:aidar_zakaz/models/lecture_model.dart';
-import 'package:aidar_zakaz/screens/item_detail_screen.dart';
+import 'package:aidar_zakaz/screens/audio_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class ShaheDetailListviewItem extends GetView<HomeScreenController> {
+class ShaheDetailListviewItem extends GetView<CategoryDetailController> {
   const ShaheDetailListviewItem(this.item, {Key? key}) : super(key: key);
   final LectureModel item;
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      contentPadding: const EdgeInsets.only(left: 16),
+      tileColor: Colors.blueGrey[900],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
       onTap: () {
-        Get.to(() => ItemDetailScreen(item),
-            binding: ItemDetailScreenBinding());
+        Get.to(() => AudioScreen(item));
       },
       title: Text(
         item.title,
@@ -21,9 +22,20 @@ class ShaheDetailListviewItem extends GetView<HomeScreenController> {
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: Text(
-        // item.name,
-        'asd',
+        item.categoryTitle,
         style: const TextStyle(fontSize: 13),
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(item.dueTime),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.more_vert),
+            iconSize: 28,
+            padding: const EdgeInsets.all(3),
+          )
+        ],
       ),
     );
   }

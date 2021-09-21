@@ -17,25 +17,28 @@ class CategoryModelAdapter extends TypeAdapter<CategoryModel> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return CategoryModel(
-      name: fields[1] as String,
-      url: fields[2] as String,
       id: fields[0] as int,
+      title: fields[1] as String,
+      image: fields[2] as String,
       isFavorite: fields[3] as bool?,
+      dateTime: fields[4] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, CategoryModel obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.name)
+      ..write(obj.title)
       ..writeByte(2)
-      ..write(obj.url)
+      ..write(obj.image)
       ..writeByte(3)
-      ..write(obj.isFavorite);
+      ..write(obj.isFavorite)
+      ..writeByte(4)
+      ..write(obj.dateTime);
   }
 
   @override

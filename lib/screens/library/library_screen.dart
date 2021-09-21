@@ -42,11 +42,8 @@
 //   }
 // }
 
-import 'package:aidar_zakaz/controllers/home_screen_controller.dart';
-import 'package:aidar_zakaz/widgets/shahe_detail_listview_item.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class LibraryScreen extends StatelessWidget {
   const LibraryScreen({Key? key}) : super(key: key);
@@ -64,13 +61,13 @@ class LibraryScreen extends StatelessWidget {
         const SizedBox(
           height: 20,
         ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: Get.find<HomeScreenController>().items.length,
-            itemBuilder: (context, index) => ShaheDetailListviewItem(
-                Get.find<HomeScreenController>().items[index]),
-          ),
-        ),
+        // Expanded(
+        //   child: ListView.builder(
+        //     itemCount: Get.find<HomeScreenController>().items.length,
+        //     itemBuilder: (context, index) => ShaheDetailListviewItem(
+        //         Get.find<HomeScreenController>().items[index]),
+        //   ),
+        // ),
       ]),
     );
   }

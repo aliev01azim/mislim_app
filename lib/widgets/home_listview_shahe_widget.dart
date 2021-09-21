@@ -12,7 +12,7 @@ class ListViewShaheWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(children: [
       SizedBox(
-        height: items.isNotEmpty ? 126 : 60,
+        height: 126,
         width: double.infinity,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,

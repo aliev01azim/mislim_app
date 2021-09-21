@@ -2,12 +2,13 @@ import 'package:aidar_zakaz/controllers/home_screen_controller.dart';
 import 'package:aidar_zakaz/screens/home_screen.dart';
 import 'package:aidar_zakaz/screens/search_screen.dart';
 import 'package:aidar_zakaz/utils/colors.dart';
+import 'package:aidar_zakaz/widgets/bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'library/library_screen.dart';
 
-class TabScreen extends GetView<HomeScreenController> {
+class TabScreen extends StatelessWidget {
   TabScreen({Key? key}) : super(key: key);
 
   final List<Widget> _widgetOptions = <Widget>[
@@ -16,7 +17,6 @@ class TabScreen extends GetView<HomeScreenController> {
     const LibraryScreen(),
     // PremiumScreen(),
   ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,7 +33,7 @@ class TabScreen extends GetView<HomeScreenController> {
             ),
           ),
           child: GetBuilder<HomeScreenController>(
-            builder: (_) {
+            builder: (controller) {
               return IndexedStack(
                   index: controller.selectedIndex, children: _widgetOptions);
             },
@@ -41,40 +41,72 @@ class TabScreen extends GetView<HomeScreenController> {
         ),
       ),
       bottomNavigationBar: GetBuilder<HomeScreenController>(
-        builder: (_) {
-          return BottomNavigationBar(
+        builder: (controller) {
+          return CustomAnimatedBottomBar(
+            containerHeight: 70,
             backgroundColor: Colorss.dark,
-            unselectedItemColor: Colors.white,
-            selectedItemColor: Colorss.primary,
-            unselectedFontSize: 10,
-            iconSize: 26,
-            unselectedLabelStyle: const TextStyle(color: Colors.white),
-            selectedFontSize: 10,
-            showUnselectedLabels: true,
-            type: BottomNavigationBarType.fixed,
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_rounded),
-                label: 'Главная',
+            selectedIndex: controller.selectedIndex,
+            showElevation: true,
+            itemCornerRadius: 24,
+            curve: Curves.easeIn,
+            onItemSelected: (val) => controller.changePage(val),
+            items: <BottomNavyBarItem>[
+              BottomNavyBarItem(
+                icon: const Icon(Icons.home_rounded),
+                title: const Text('Главная'),
+                activeColor: Colors.green,
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.search_rounded),
-                label: 'Поиск',
+              BottomNavyBarItem(
+                icon: const Icon(Icons.search_rounded),
+                title: const Text('Поиск'),
+                activeColor: Colors.cyan,
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.library_music_rounded),
-                label: 'Моя медиатека',
+              BottomNavyBarItem(
+                icon: const Icon(Icons.library_music_rounded),
+                title: const Text('Моя медиатека'),
+                activeColor: Colors.amberAccent,
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.settings),
-                label: 'Настройки',
+              BottomNavyBarItem(
+                icon: const Icon(Icons.settings),
+                title: const Text('Настройки'),
+                activeColor: Colors.brown[300]!,
               ),
             ],
-            currentIndex: controller.selectedIndex,
-            onTap: (val) => controller.changePage(val),
           );
         },
       ),
     );
   }
 }
+// BottomNavigationBar(
+//             fixedColor: Colors.green,
+//             backgroundColor: Colorss.dark,
+//             unselectedItemColor: Colors.white,
+//             unselectedFontSize: 10,
+//             iconSize: 30,
+//             unselectedIconTheme: const IconThemeData(size: 28),
+//             unselectedLabelStyle: const TextStyle(color: Colors.white),
+//             selectedFontSize: 11,
+//             showUnselectedLabels: true,
+//             type: BottomNavigationBarType.fixed,
+//             items: const <BottomNavigationBarItem>[
+//               BottomNavigationBarItem(
+//                 icon: Icon(Icons.home_rounded),
+//                 label: 'Главная',
+//               ),
+//               BottomNavigationBarItem(
+//                 icon: Icon(Icons.search_rounded),
+//                 label: 'Поиск',
+//               ),
+//               BottomNavigationBarItem(
+//                 icon: Icon(Icons.library_music_rounded),
+//                 label: 'Медиатека',
+//               ),
+//               BottomNavigationBarItem(
+//                 icon: Icon(Icons.settings),
+//                 label: 'Настройки',
+//               ),
+//             ],
+//             currentIndex: controller.selectedIndex,
+//             onTap: (val) => controller.changePage(val),
+//           );

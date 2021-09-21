@@ -1,3 +1,4 @@
+import 'package:aidar_zakaz/controllers/category_detail_controller.dart';
 import 'package:aidar_zakaz/controllers/home_screen_controller.dart';
 import 'package:aidar_zakaz/models/shahe_model.dart';
 import 'package:aidar_zakaz/utils/colors.dart';
@@ -6,7 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class CategoryShaheDetailScreen extends GetView<HomeScreenController> {
+class CategoryShaheDetailScreen extends GetView<CategoryDetailController> {
   const CategoryShaheDetailScreen(this.shahe, {Key? key}) : super(key: key);
   final ShaheModel shahe;
   @override
@@ -21,9 +22,10 @@ class CategoryShaheDetailScreen extends GetView<HomeScreenController> {
                 Row(
                   children: [
                     GetBuilder<HomeScreenController>(
-                      builder: (_) {
+                      builder: (homeController) {
                         return IconButton(
-                          onPressed: () => controller.addFavoriteShahes(shahe),
+                          onPressed: () =>
+                              homeController.addFavoriteShahes(shahe),
                           icon: shahe.isFavorite!
                               ? const Icon(
                                   Icons.favorite,
@@ -56,7 +58,7 @@ class CategoryShaheDetailScreen extends GetView<HomeScreenController> {
               Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
                 child: Text(
-                  shahe.name,
+                  shahe.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -84,13 +86,22 @@ class CategoryShaheDetailScreen extends GetView<HomeScreenController> {
               const SizedBox(
                 height: 20,
               ),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                itemBuilder: (_, index) =>
-                    ShaheDetailListviewItem(controller.items[index]),
-                itemCount: controller.items.length,
+              GetBuilder<CategoryDetailController>(
+                initState: (_) => controller.fetchLecOfAuthors(shahe.id),
+                builder: (_) {
+                  return controller.isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          itemBuilder: (_, index) => ShaheDetailListviewItem(
+                              controller.lecturesA[index]),
+                          itemCount: controller.lecturesA.length,
+                        );
+                },
               ),
             ],
           ),

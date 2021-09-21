@@ -13,29 +13,32 @@ class HomeScreen extends GetView<HomeScreenController> {
     return SingleChildScrollView(
       controller: ScrollController(),
       child: GetBuilder<HomeScreenController>(builder: (_) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Titlee('Популярные категории'),
-            ListViewWidget(controller.itemsPopular, false),
-            if (controller.historyCategories.length >= 1)
-              const Titlee('Недавно прослушанные'),
-            if (controller.historyCategories.length >= 1)
-              ListViewWidget(controller.historyCategories, false),
-            const Titlee('Популярные шейхи'),
-            const SizedBox(height: 20),
-            ListViewShaheWidget(controller.itemsShahe, false),
-            const Titlee('Новые подборки'),
-            ListViewWidget(controller.itemsPopular, false),
-            if (controller.favCategories.length >= 1)
-              const Titlee('Избранные категории'),
-            if (controller.favCategories.length >= 1)
-              ListViewWidget(controller.favCategories, true),
-            if (controller.favShahes.length >= 1)
-              const Titlee('Избранные шейхи'),
-            if (controller.favShahes.length >= 1)
-              ListViewShaheWidget(controller.favShahes, true),
-          ],
+        return Theme(
+          data: Theme.of(context).copyWith(accentColor: Colors.transparent),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Titlee('Популярные категории'),
+              ListViewWidget(controller.items, false),
+              if (controller.historyCategories.length >= 1)
+                const Titlee('Недавно прослушанные'),
+              if (controller.historyCategories.length >= 1)
+                ListViewWidget(controller.historyCategories, false),
+              const Titlee('Популярные шейхи'),
+              const SizedBox(height: 20),
+              ListViewShaheWidget(controller.shahes, false),
+              const Titlee('Новые подборки'),
+              ListViewWidget(controller.items, false),
+              if (controller.favCategories.length >= 1)
+                const Titlee('Избранные категории'),
+              if (controller.favCategories.length >= 1)
+                ListViewWidget(controller.favCategories, true),
+              if (controller.favShahes.length >= 1)
+                const Titlee('Избранные шейхи'),
+              if (controller.favShahes.length >= 1)
+                ListViewShaheWidget(controller.favShahes, true),
+            ],
+          ),
         );
       }),
     );

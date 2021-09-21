@@ -1,38 +1,45 @@
-class LectureModel {
-  late final int id;
-  late final int category;
-  late final int author;
-  // late final String name;
-  bool? isFavorite;
-  late final String title;
-  // аудио
-  late final String lecture_file;
+import 'package:aidar_zakaz/models/shahe_model.dart';
+import 'package:hive/hive.dart';
+part 'lecture_model.g.dart';
 
+@HiveType(typeId: 2)
+class LectureModel {
+  @HiveField(0)
+  late final int id;
+  @HiveField(1)
+  late final String title;
+  @HiveField(2)
+  late final String lectureFile;
+  @HiveField(3)
+  late final String dueTime;
+  @HiveField(4)
+  late ShaheModel author;
+  @HiveField(5)
+  late final int categoryId;
+  @HiveField(6)
+  late final String categoryTitle;
+  @HiveField(7)
+  bool? isFavorite;
   LectureModel(
       {required this.id,
-      required this.category,
+      required this.categoryId,
+      required this.categoryTitle,
       required this.author,
-      // required this.name,
-      this.isFavorite = false,
       required this.title,
-      required this.lecture_file});
+      this.isFavorite = false,
+      required this.lectureFile,
+      required this.dueTime});
 
   LectureModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
-    category = json['category'];
-    author = json['author'];
-    // name = json['name'];
-    // isFavorite
+    categoryId = (json['category'] != null ? json['category']['id'] : null)!;
+    categoryTitle =
+        (json['category'] != null ? json['category']['title'] : null)!;
+    author =
+        (json['author'] != null ? ShaheModel.fromJson(json['author']) : null)!;
     title = json['title'];
-    lecture_file = json['lecture_file'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['id'] = id;
-    // data['name'] = name;
-    data['title'] = title;
-    data['audioUrl'] = lecture_file;
-    return data;
+    lectureFile = json['lecture_file'];
+    dueTime = json['due_time'];
+    isFavorite = false;
   }
 }

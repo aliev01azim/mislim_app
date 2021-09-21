@@ -44,9 +44,6 @@ class BaseClient {
   //   }
   // }
 
-  // //DELETE
-  // //OTHER
-
   dynamic _processResponse(http.Response response) {
     var responseJson = json.decode(utf8.decode(response.bodyBytes));
     if (response.statusCode == 200) {
@@ -62,6 +59,7 @@ class BaseClient {
           'Error occured with code : ${response.statusCode}',
           response.request!.url.toString());
     }
+    // доработать?
     // else if (response.statusCode == 403) {
     //   throw UnAuthorizedException(
     //       utf8.decode(response.bodyBytes), response.request!.url.toString());

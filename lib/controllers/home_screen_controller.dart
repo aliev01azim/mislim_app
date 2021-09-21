@@ -2,7 +2,6 @@ import 'package:aidar_zakaz/models/category_model.dart';
 import 'package:aidar_zakaz/models/lecture_model.dart';
 import 'package:aidar_zakaz/models/shahe_model.dart';
 import 'package:aidar_zakaz/services/base_client.dart';
-import 'package:aidar_zakaz/utils/images.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
@@ -10,166 +9,118 @@ import 'base_controller.dart';
 
 class HomeScreenController extends GetxController with BaseController {
 // for tabs
-  var selectedIndex = 1;
+  var selectedIndex = 0;
   void changePage(int value) {
     selectedIndex = value;
     update();
   }
 
   //
-  final List<LectureModel> _items = [
-    // LectureModel(
-    //   id: 1,
-    //   category: 1,
-    //   author: 1,
-    //   title: 'Смысл жизни1 asd asdasd as das  asdadasdadd',
-    //   // name: 'Azim weih',
-    //   lecture_file:
-    //       'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    //   isFavorite: false,
-    // ),
-    // LectureModel(
-    //   id: 2,
-    //   category: 2,
-    //   author: 2,
-    //   title: 'Смысл жизни2',
-    //   // name: 'Аиша Нурмандинова',
-    //   lecture_file:
-    //       'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-    //   isFavorite: true,
-    // ),
-    // LectureModel(
-    //   id: 3,
-    //   category: 3,
-    //   author: 3,
-    //   title: 'Смысл жизни3',
-    //   // name: 'Azim weih',
-    //   lecture_file:
-    //       'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-    //   isFavorite: false,
-    // ),
-    // LectureModel(
-    //   id: 4,
-    //   category: 4,
-    //   author: 2,
-    //   title: 'Смысл жизни4',
-    //   // name: 'Azim weih',
-    //   lecture_file:
-    //       'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
-    //   isFavorite: false,
-    // ),
-    // LectureModel(
-    //   id: 5,
-    //   category: 5,
-    //   author: 4,
-    //   title: 'Смысл жизни5',
-    //   // name: 'Azim weih',
-    //   lecture_file:
-    //       'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
-    //   isFavorite: false,
-    // ),
-    // LectureModel(
-    //   id: 6,
-    //   category: 6,
-    //   author: 5,
-    //   title: 'Смысл жизни6',
-    //   // name: 'Azim weih',
-    //   lecture_file:
-    //       'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
-    //   isFavorite: false,
-    // ),
-    // LectureModel(
-    //   id: 7,
-    //   category: 7,
-    //   author: 5,
-    //   title: 'Смысл жизни7',
-    //   // name: 'Azim weih',
-    //   lecture_file:
-    //       'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3',
-    //   isFavorite: false,
-    // ),
-  ];
+  late final Box<CategoryModel> _favoriteCategories =
+      Hive.box<CategoryModel>('favorite_categories');
+  late final Box<ShaheModel> _favoriteShahes =
+      Hive.box<ShaheModel>('favorite_shahes');
+  late final Box<CategoryModel> _categorieHistory =
+      Hive.box<CategoryModel>('history_categories');
+  late final Box<LectureModel> _favoriteLectures =
+      Hive.box<LectureModel>('favorite_lectuers');
+
+  final List<CategoryModel> _items = [];
 
   get items => _items;
   //
-  final List<CategoryModel> _itemsPopular = [
-    CategoryModel(
-        id: 1,
-        name: 'Коран и Тафсир sa da s das das dasd dsa das das da d ad ',
-        url: Images.kuran),
-    CategoryModel(id: 2, name: 'Дуа', url: Images.dua),
-    CategoryModel(id: 3, name: 'Акыда', url: Images.akyda),
-    CategoryModel(id: 4, name: 'Сунна Пророка', url: Images.sunna),
-    CategoryModel(id: 5, name: 'Хадисы', url: Images.hadis),
-    CategoryModel(id: 6, name: 'Фикх', url: Images.fikh),
-    CategoryModel(id: 7, name: 'Жизнь Пророка', url: Images.prorok),
-  ];
+  final List<CategoryModel> _itemsPopular = [];
   get itemsPopular => _itemsPopular;
 //
-  final List<ShaheModel> _itemsShahe = [
-    ShaheModel(name: 'Салих аль-Фаузан', id: 1),
-    ShaheModel(name: 'Абдуллахаджи Хидирбек', id: 2),
-    ShaheModel(name: 'Алиев Азим', id: 3),
-    ShaheModel(name: 'Абдуллахаджи Хидирбек', id: 4),
-    ShaheModel(name: 'Салих аль-Фаузан', id: 5),
-  ];
-  get itemsShahe => _itemsShahe;
-
-  // @override
-  // void onClose() {
-  //   Hive.box<CategoryModel>('favorite_categories').compact();
-  //   Hive.box<CategoryModel>('favorite_categories').close();
-  //   Hive.box<ShaheModel>('favorite_shahes').compact();
-  //   Hive.box<ShaheModel>('favorite_shahes').close();
-  //   super.onClose();
-  // }
+  final List<ShaheModel> _itemsShahe = [];
+  get shahes => _itemsShahe;
+//
+  @override
+  void onClose() {
+    _favoriteCategories.compact();
+    _favoriteCategories.close();
+    _favoriteShahes.compact();
+    _favoriteShahes.close();
+    _categorieHistory.compact();
+    _categorieHistory.close();
+    _favoriteLectures.compact();
+    _favoriteLectures.close();
+    super.onClose();
+  }
 
   @override
   void onInit() {
     getLocalData();
-    getLectures();
+    getCategories();
+    getAuthors();
     super.onInit();
   }
 
-  void getLectures() async {
+  void getCategories() async {
     var response =
-        await BaseClient().get('/api/v1/lectures/').catchError(handleError);
+        await BaseClient().get('/api/v1/categories/').catchError(handleError);
     if (response == null) return;
-    final List<LectureModel> loadedLectures = [];
+    final List<CategoryModel> loadedCategories = [];
     for (var lec in response) {
-      loadedLectures.add(LectureModel.fromJson(lec));
+      loadedCategories.add(CategoryModel.fromJson(lec));
     }
-    _items.assignAll(loadedLectures);
+    _items.assignAll(loadedCategories);
+    update();
+  }
+
+  void getAuthors() async {
+    var response =
+        await BaseClient().get('/api/v1/authors/').catchError(handleError);
+    if (response == null) return;
+    final List<ShaheModel> _loadedShahes = [];
+    for (var shahe in response) {
+      _loadedShahes.add(ShaheModel.fromJson(shahe));
+    }
+    _itemsShahe.assignAll(_loadedShahes);
     update();
   }
 
   void getLocalData() async {
+    // adapters
     Hive.registerAdapter(CategoryModelAdapter());
     Hive.registerAdapter(ShaheModelAdapter());
-    var favBox = await Hive.openBox<CategoryModel>('favorite_categories');
-    var shaheBox = await Hive.openBox<ShaheModel>('favorite_shahes');
-    var historyBox = await Hive.openBox<CategoryModel>('history_categories');
-    _favCategories = favBox.values.toList();
-    _favShahes = shaheBox.values.toList();
-    _historyCategories = historyBox.values.toList();
+    Hive.registerAdapter(LectureModelAdapter());
+    var _favBox = await Hive.openBox<CategoryModel>('favorite_categories');
+    var _shaheBox = await Hive.openBox<ShaheModel>('favorite_shahes');
+    var _historyBox = await Hive.openBox<CategoryModel>('history_categories');
+    var _favLecturesBox = await Hive.openBox<LectureModel>('favorite_lectuers');
+    _favCategories = _favBox.values.toList();
+    _favShahes = _shaheBox.values.toList();
+    _historyCategories = _historyBox.values.toList();
+    _favLectures = _favLecturesBox.values.toList();
+    _historyBox.clear();
     update();
   }
 
-  // потом при запросе controller.getData() или он инит())
+  List<LectureModel> _favLectures = [];
+  get favLectures => _favLectures;
+  void addFavoriteLecture(LectureModel item) async {
+    item.isFavorite = !item.isFavorite!;
+    if (item.isFavorite == true) {
+      await _favoriteLectures.put(item.id, item);
+    } else {
+      await _favoriteLectures.delete(item.id);
+    }
+    _favLectures = _favoriteLectures.values.toList();
+    update();
+  }
 
   List<CategoryModel> _favCategories = [];
   get favCategories => _favCategories;
 
   void addFavoriteCategory(CategoryModel item) async {
     item.isFavorite = !item.isFavorite!;
-    var box = Hive.box<CategoryModel>('favorite_categories');
     if (item.isFavorite == true) {
-      await box.put(item.id, item);
+      await _favoriteCategories.put(item.id, item);
     } else {
-      await box.delete(item.id);
+      await _favoriteCategories.delete(item.id);
     }
-    _favCategories = box.values.toList();
-    // box.close();
+    _favCategories = _favoriteCategories.values.toList();
     update();
   }
 
@@ -178,29 +129,26 @@ class HomeScreenController extends GetxController with BaseController {
 
   void addFavoriteShahes(ShaheModel item) async {
     item.isFavorite = !item.isFavorite!;
-    var box = Hive.box<ShaheModel>('favorite_shahes');
     if (item.isFavorite == true) {
-      await box.put(item.id, item);
+      await _favoriteShahes.put(item.id, item);
     } else {
-      await box.delete(item.id);
+      await _favoriteShahes.delete(item.id);
     }
-    _favShahes = box.values.toList();
-    // box.close();
+    _favShahes = _favoriteShahes.values.toList();
     update();
   }
 
   List<CategoryModel> _historyCategories = [];
   get historyCategories => _historyCategories;
   void addHistory(CategoryModel item) async {
-    if (_historyCategories.contains(item)) {
-      return;
+    item.dateTime = DateTime.now().add(const Duration(hours: 24));
+    await _categorieHistory.put(item.id, item);
+    for (var item in _historyCategories) {
+      if (DateTime.now().isAfter(item.dateTime!)) {
+        await _categorieHistory.delete(item.id);
+      }
     }
-    var box = Hive.box<CategoryModel>('history_categories');
-    await box.add(item);
-    _historyCategories = box.values.toList().reversed.toList();
-    if (box.values.length >= 10) {
-      box.clear();
-    }
+    _historyCategories = _categorieHistory.values.toList();
     update();
   }
 }

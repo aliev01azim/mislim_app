@@ -1,7 +1,8 @@
-import 'package:aidar_zakaz/bindings/item_detail_screen_binding.dart';
+import 'package:aidar_zakaz/bindings/category_detail_screen_binding.dart';
 import 'package:aidar_zakaz/controllers/home_screen_controller.dart';
 import 'package:aidar_zakaz/models/category_model.dart';
 import 'package:aidar_zakaz/screens/category_detail_screen.dart';
+import 'package:aidar_zakaz/utils/images.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -14,23 +15,26 @@ class ListviewItem extends StatelessWidget {
     return InkWell(
       onTap: () {
         Get.to(() => CategoryDetailScreen(item),
-            binding: ItemDetailScreenBinding());
+            binding: CategoryDetailScreenBinding(),
+            transition: Transition.fadeIn);
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 10),
         width: 190,
         child: Stack(
           children: [
-            Container(
-              height: 180,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
-                image: DecorationImage(
-                  fit: BoxFit.cover,
-                  image: AssetImage(
-                    item.url,
-                  ),
-                ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(5),
+              child: SizedBox(
+                height: 180,
+                child: FadeInImage(
+                    fit: BoxFit.cover,
+                    placeholder: const AssetImage(
+                      Images.placeHolder,
+                    ),
+                    image: NetworkImage(
+                      item.image,
+                    )),
               ),
             ),
             Positioned(
@@ -38,7 +42,7 @@ class ListviewItem extends StatelessWidget {
               right: 0,
               top: 186,
               child: Text(
-                item.name,
+                item.title,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 16,

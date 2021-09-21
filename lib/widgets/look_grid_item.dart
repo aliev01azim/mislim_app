@@ -1,17 +1,20 @@
+import 'package:aidar_zakaz/bindings/category_detail_screen_binding.dart';
+import 'package:aidar_zakaz/models/category_model.dart';
+import 'package:aidar_zakaz/screens/category_detail_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
+import 'package:get/get.dart';
+
 class LookGridItem extends StatelessWidget {
-  const LookGridItem(this.title, {Key? key}) : super(key: key);
-  final String title;
+  const LookGridItem(this.category, {Key? key}) : super(key: key);
+  final CategoryModel category;
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        // Navigator.of(context)
-        // .pushNamed(KuhnyaCategoryScreen.routeName, arguments: title);
-      },
+      onTap: () => Get.to(() => CategoryDetailScreen(category),
+          binding: CategoryDetailScreenBinding()),
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
@@ -29,7 +32,7 @@ class LookGridItem extends StatelessWidget {
         ),
         child: Center(
             child: Text(
-          title,
+          category.title,
           style: const TextStyle(
               fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Alisson'),
           maxLines: 2,

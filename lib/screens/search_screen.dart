@@ -1,4 +1,5 @@
 import 'package:aidar_zakaz/bindings/poisk_screen_binding.dart';
+import 'package:aidar_zakaz/controllers/home_screen_controller.dart';
 import 'package:aidar_zakaz/controllers/poisk_controller.dart';
 import 'package:aidar_zakaz/screens/poisk_screen.dart';
 import 'package:aidar_zakaz/widgets/look_grid_item.dart';
@@ -21,7 +22,8 @@ class SearchScreen extends GetView<PoiskController> {
               child: TextField(
                 onTap: () {
                   Get.to(() => const PoiskScreen(),
-                      binding: PoiskScreenBinding());
+                      binding: PoiskScreenBinding(),
+                      transition: Transition.fadeIn);
                 },
                 decoration: InputDecoration(
                   hintText: 'Лекции, шейхи и категории',
@@ -42,27 +44,22 @@ class SearchScreen extends GetView<PoiskController> {
                 showCursor: false,
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 90, left: 15, right: 15),
-              child: GridView(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 15,
-                    mainAxisSpacing: 15),
-                children: const [
-                  LookGridItem('Коран и Тафсир'),
-                  LookGridItem('Дуа'),
-                  LookGridItem('Фикх'),
-                  LookGridItem('Сунна Пророка'),
-                  LookGridItem('Хадисы'),
-                  LookGridItem('Акыда'),
-                  LookGridItem('Жизнь Пророка'),
-                  LookGridItem('Мудрость и Наставления'),
-                  LookGridItem('Течения и секты'),
-                  LookGridItem('История Ислама'),
-                  LookGridItem('Оберегания человека'),
-                ],
-              ),
+            GetBuilder<HomeScreenController>(
+              builder: (homeController) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 90, left: 15, right: 15),
+                  child: GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 15,
+                            mainAxisSpacing: 15),
+                    itemBuilder: (context, index) =>
+                        LookGridItem(homeController.items[index]),
+                    itemCount: homeController.items.length,
+                  ),
+                );
+              },
             ),
           ],
         ),
