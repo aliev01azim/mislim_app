@@ -14,7 +14,16 @@ class ShaheDetailListviewItem extends GetView<CategoryDetailController> {
       tileColor: Colors.blueGrey[900],
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
       onTap: () {
-        Get.to(() => AudioScreen(item));
+        Get.to(
+          () => const PlayScreen(
+            data: {
+              'response': [],
+              'index': 0,
+              'offline': false,
+            },
+            fromMiniplayer: false,
+          ),
+        );
       },
       title: Text(
         item.title,

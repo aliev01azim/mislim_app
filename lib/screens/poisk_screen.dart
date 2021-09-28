@@ -93,8 +93,17 @@ class HistoryListTile extends StatelessWidget {
                         binding: CategoryDetailScreenBinding());
                   }
                   if (item is LectureModel) {
-                    await Get.to(() => AudioScreen(item),
-                        binding: CategoryDetailScreenBinding(), arguments: '');
+                    await Get.to(
+                        () => const PlayScreen(
+                              data: {
+                                'response': [],
+                                'index': 0,
+                                'offline': false,
+                              },
+                              fromMiniplayer: false,
+                            ),
+                        binding: CategoryDetailScreenBinding(),
+                        arguments: '');
                   }
                   if (item is ShaheModel) {
                     await Get.to(() => CategoryShaheDetailScreen(item),

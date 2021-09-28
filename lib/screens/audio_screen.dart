@@ -1,992 +1,654 @@
-import 'package:aidar_zakaz/controllers/home_screen_controller.dart';
-import 'package:aidar_zakaz/models/lecture_model.dart';
-import 'package:aidar_zakaz/utils/colors.dart';
-import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../all_about_audio/notifiers/play_button_notifier.dart';
-import '../all_about_audio/notifiers/progress_notifier.dart';
-import '../all_about_audio/notifiers/repeat_button_notifier.dart';
-import '../all_about_audio/audio_manager.dart';
-import '../all_about_audio/services/service_locator.dart';
+import 'dart:async';
+import 'dart:io';
 
-class AudioScreen extends StatefulWidget {
-  const AudioScreen(this.item, {Key? key}) : super(key: key);
-  final LectureModel item;
+import 'package:aidar_zakaz/all_about_audio/mediaitem_converter.dart';
+import 'package:aidar_zakaz/services/service_locator.dart';
+import 'package:aidar_zakaz/utils/colors.dart';
+import 'package:aidar_zakaz/utils/theme.dart';
+import 'package:aidar_zakaz/widgets/download_button.dart';
+import 'package:aidar_zakaz/widgets/seekbar.dart';
+import 'package:audio_service/audio_service.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:hive/hive.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:rxdart/rxdart.dart';
+import 'package:share_plus/share_plus.dart';
+
+class PlayScreen extends StatefulWidget {
+  final Map data;
+  final bool fromMiniplayer;
+  const PlayScreen({
+    Key? key,
+    required this.data,
+    required this.fromMiniplayer,
+  }) : super(key: key);
   @override
-  _AudioScreenState createState() => _AudioScreenState();
+  _PlayScreenState createState() => _PlayScreenState();
 }
 
-class _AudioScreenState extends State<AudioScreen> {
+class _PlayScreenState extends State<PlayScreen> {
+  bool fromMiniplayer = false;
+  String repeatMode =
+      Hive.box('settings').get('repeatMode', defaultValue: 'None').toString();
+  bool enforceRepeat =
+      Hive.box('settings').get('enforceRepeat', defaultValue: false) as bool;
+  bool shuffle =
+      Hive.box('settings').get('shuffle', defaultValue: false) as bool;
+  List<MediaItem> globalQueue = [];
+  int globalIndex = 0;
+  bool same = false;
+  List response = [];
+  bool fetched = false;
+  bool offline = false;
+  String defaultCover = '';
+  final audioHandler = getIt<AudioPlayerHandler>();
+
+  Future<void> main() async {
+    await Hive.openBox('Favorite Songs');
+  }
+
   @override
   void initState() {
     super.initState();
-    getIt<PageManager>().init(Get.arguments != null);
+    main();
   }
 
-  // @override
-  // void dispose() {
-  //   getIt<PageManager>().stop();
-  //   getIt<PageManager>().dispose();
-  //   super.dispose();
-  // }
+  Future<MediaItem> setTags(Map response, Directory tempDir) async {
+    String playTitle = response['title'].toString();
 
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colorss.dark,
-        appBar: AppBar(
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 8.0, top: 8),
-            child: Container(
-              decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(40.0)),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 30,
-                ),
-                onPressed: () => Get.back(),
-                color: Colors.white,
-              ),
-            ),
-          ),
-          title: Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (Get.arguments != null)
-                  Text(
-                    'Категория:',
-                    style: TextStyle(
-                        color: Colors.white.withOpacity(0.6), fontSize: 16),
-                  ),
-                if (Get.arguments != null)
-                  Text(
-                    widget.item.categoryTitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
-                  ),
-                if (Get.arguments == null)
-                  Text(
-                    'Проповедник:',
-                    style: TextStyle(
-                        color: Colors.white.withOpacity(0.6), fontSize: 16),
-                  ),
-                if (Get.arguments == null)
-                  Text(
-                    widget.item.author.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
-                  ),
-              ],
-            ),
-          ),
-          actions: [
-            IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert))
-          ],
-        ),
-        body: Column(
-          children: [
-            Expanded(
-              child: Center(
-                child: Container(
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5),
-                      color: Colors.blueGrey[700]),
-                  height: 200,
-                  width: 200,
-                  child: Icon(
-                    Icons.headphones,
-                    color: Colors.grey[300],
-                    size: 100,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(
-              height: 22.0,
-            ),
-            const CurrentSongTitle(),
-            Text(
-              Get.arguments == null
-                  ? 'из категории : ${widget.item.categoryTitle}'
-                  : 'проповедник : ${widget.item.author.title}',
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                  color: Colors.white.withOpacity(0.6),
-                  fontStyle: FontStyle.italic,
-                  fontSize: 16.0),
-            ),
-            const SizedBox(
-              height: 30.0,
-            ),
-            const AudioProgressBar(),
-            AudioControlButtons(widget.item),
-          ],
-        ),
-      ),
-    );
-  }
-}
+    String playArtist = response['artist'].toString();
 
-class CurrentSongTitle extends StatelessWidget {
-  const CurrentSongTitle({Key? key}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    final pageManager = getIt<PageManager>();
-    return ValueListenableBuilder<String>(
-      valueListenable: pageManager.currentSongTitleNotifier,
-      builder: (_, title, __) {
-        return Text(
-          title,
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              overflow: TextOverflow.ellipsis,
-              fontSize: 22.0),
-        );
-      },
-    );
-  }
-}
+    final String playAlbum = response['album'].toString();
+    final int playDuration =
+        int.parse(response['duration'].toString().split(':')[0]) * 60 +
+            int.parse(response['duration'].toString().split(':')[1]);
 
-class AudioProgressBar extends StatelessWidget {
-  const AudioProgressBar({Key? key}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    final pageManager = getIt<PageManager>();
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: ValueListenableBuilder<ProgressBarState>(
-        valueListenable: pageManager.progressNotifier,
-        builder: (_, value, __) {
-          return ProgressBar(
-            barHeight: 3,
-            bufferedBarColor: Colors.blue[900],
-            thumbColor: Colors.indigo[400],
-            progressBarColor: Colors.indigo[400],
-            progress: value.current,
-            buffered: value.buffered,
-            total: value.total,
-            onSeek: pageManager.seek,
-          );
-        },
-      ),
-    );
-  }
-}
-
-class AudioControlButtons extends StatelessWidget {
-  const AudioControlButtons(this.item, {Key? key}) : super(key: key);
-  final LectureModel item;
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 100,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          GetBuilder<HomeScreenController>(
-            builder: (homeController) {
-              return IconButton(
-                onPressed: () => homeController.addFavoriteLecture(item),
-                icon: item.isFavorite!
-                    ? const Icon(
-                        Icons.favorite,
-                        size: 25,
-                      )
-                    : const Icon(
-                        Icons.favorite_border,
-                        size: 25,
-                      ),
-              );
-            },
-          ),
-          const PreviousSongButton(),
-          const PlayButton(),
-          const NextSongButton(),
-          const RepeatButton(),
-        ],
-      ),
-    );
-  }
-}
-
-class RepeatButton extends StatelessWidget {
-  const RepeatButton({Key? key}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    final pageManager = getIt<PageManager>();
-    return ValueListenableBuilder<RepeatState>(
-      valueListenable: pageManager.repeatButtonNotifier,
-      builder: (context, value, child) {
-        Icon icon;
-        switch (value) {
-          case RepeatState.off:
-            icon = const Icon(
-              Icons.repeat_rounded,
-              size: 30,
-            );
-            break;
-          case RepeatState.repeatSong:
-            icon = const Icon(
-              Icons.repeat_one_rounded,
-              size: 30,
-            );
-            break;
-          case RepeatState.shuffle:
-            icon = const Icon(
-              Icons.shuffle_rounded,
-              size: 30,
-            );
-            break;
-        }
-        return IconButton(
-          icon: icon,
-          onPressed: pageManager.repeat,
-        );
-      },
-    );
-  }
-}
-
-class PreviousSongButton extends StatelessWidget {
-  const PreviousSongButton({Key? key}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    final pageManager = getIt<PageManager>();
-    return ValueListenableBuilder<bool>(
-      valueListenable: pageManager.isFirstSongNotifier,
-      builder: (_, isFirst, __) {
-        return IconButton(
-          icon: const Icon(
-            Icons.skip_previous_rounded,
-            size: 40,
-          ),
-          onPressed: (isFirst) ? null : pageManager.previous,
-        );
-      },
-    );
-  }
-}
-
-class PlayButton extends StatelessWidget {
-  const PlayButton({Key? key}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    final pageManager = getIt<PageManager>();
-    return ValueListenableBuilder<ButtonState>(
-      valueListenable: pageManager.playButtonNotifier,
-      builder: (_, value, __) {
-        switch (value) {
-          case ButtonState.loading:
-            return Container(
-              margin: const EdgeInsets.all(8.0),
-              width: 32.0,
-              height: 32.0,
-              child: const Center(child: CircularProgressIndicator()),
-            );
-          case ButtonState.paused:
-            return IconButton(
-              icon: const Icon(Icons.play_arrow_rounded),
-              iconSize: 70.0,
-              onPressed: pageManager.play,
-            );
-          case ButtonState.playing:
-            return IconButton(
-              icon: const Icon(Icons.pause),
-              iconSize: 70.0,
-              onPressed: pageManager.pause,
-            );
-        }
-      },
-    );
-  }
-}
-
-class NextSongButton extends StatelessWidget {
-  const NextSongButton({Key? key}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    final pageManager = getIt<PageManager>();
-    return ValueListenableBuilder<bool>(
-      valueListenable: pageManager.isLastSongNotifier,
-      builder: (_, isLast, __) {
-        return IconButton(
-          icon: const Icon(
-            Icons.skip_next_rounded,
-            size: 40,
-          ),
-          onPressed: (isLast) ? null : pageManager.next,
-        );
-      },
-    );
-  }
-}
-
-
-
-
-
-
-
-
-/*
-class MainScreen extends StatelessWidget {
-  /// Tracks the position while the user drags the seek bar.
-  final BehaviorSubject<double> _dragPositionSubject =
-      BehaviorSubject.seeded(null);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Audio Service Demo'),
-      ),
-      body: Center(
-        child: StreamBuilder<ScreenState>(
-          stream: _screenStateStream,
-          builder: (context, snapshot) {
-            final screenState = snapshot.data;
-            final queue = screenState?.queue;
-            final mediaItem = screenState?.mediaItem;
-            final state = screenState?.playbackState;
-            final processingState =
-                state?.processingState ?? AudioProcessingState.none;
-            final playing = state?.playing ?? false;
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (processingState == AudioProcessingState.none) ...[
-                  audioPlayerButton(),
-                  if (kIsWeb || !Platform.isMacOS) textToSpeechButton(),
-                ] else ...[
-                  if (queue != null && queue.isNotEmpty)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.skip_previous),
-                          iconSize: 64.0,
-                          onPressed: mediaItem == queue.first
-                              ? null
-                              : AudioService.skipToPrevious,
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.skip_next),
-                          iconSize: 64.0,
-                          onPressed: mediaItem == queue.last
-                              ? null
-                              : AudioService.skipToNext,
-                        ),
-                      ],
-                    ),
-                  if (mediaItem?.title != null) Text(mediaItem.title),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (playing) pauseButton() else playButton(),
-                      stopButton(),
-                    ],
-                  ),
-                  positionIndicator(mediaItem, state),
-                  Text("Processing state: " +
-                      "$processingState".replaceAll(RegExp(r'^.*\.'), '')),
-                  StreamBuilder(
-                    stream: AudioService.customEventStream,
-                    builder: (context, snapshot) {
-                      return Text("custom event: ${snapshot.data}");
-                    },
-                  ),
-                  StreamBuilder<bool>(
-                    stream: AudioService.notificationClickEventStream,
-                    builder: (context, snapshot) {
-                      return Text(
-                        'Notification Click Status: ${snapshot.data}',
-                      );
-                    },
-                  ),
-                ],
-              ],
-            );
-          },
-        ),
-      ),
-    );
+    final String filePath = await getImageFileFromAssets();
+    final MediaItem tempDict = MediaItem(
+        id: response['id'].toString(),
+        album: playAlbum,
+        duration: Duration(seconds: playDuration),
+        title: playTitle,
+        artist: playArtist,
+        artUri: Uri.file(filePath),
+        extras: {
+          'url': response['url'],
+        });
+    return tempDict;
   }
 
-  /// Encapsulate all the different data we're interested in into a single
-  /// stream so we don't have to nest StreamBuilders.
-  Stream<ScreenState> get _screenStateStream =>
-      Rx.combineLatest3<List<MediaItem>, MediaItem, PlaybackState, ScreenState>(
-          AudioService.queueStream,
-          AudioService.currentMediaItemStream,
-          AudioService.playbackStateStream,
-          (queue, mediaItem, playbackState) =>
-              ScreenState(queue, mediaItem, playbackState));
-
-  RaisedButton audioPlayerButton() => startButton(
-        'AudioPlayer',
-        () {
-          AudioService.start(
-            backgroundTaskEntrypoint: _audioPlayerTaskEntrypoint,
-            androidNotificationChannelName: 'Audio Service Demo',
-            // Enable this if you want the Android service to exit the foreground state on pause.
-            //androidStopForegroundOnPause: true,
-            androidNotificationColor: 0xFF2196f3,
-            androidNotificationIcon: 'mipmap/ic_launcher',
-            androidEnableQueue: true,
-          );
-        },
-      );
-
-  RaisedButton textToSpeechButton() => startButton(
-        'TextToSpeech',
-        () {
-          AudioService.start(
-            backgroundTaskEntrypoint: _textToSpeechTaskEntrypoint,
-            androidNotificationChannelName: 'Audio Service Demo',
-            androidNotificationColor: 0xFF2196f3,
-            androidNotificationIcon: 'mipmap/ic_launcher',
-          );
-        },
-      );
-
-  RaisedButton startButton(String label, VoidCallback onPressed) =>
-      RaisedButton(
-        child: Text(label),
-        onPressed: onPressed,
-      );
-
-  IconButton playButton() => IconButton(
-        icon: Icon(Icons.play_arrow),
-        iconSize: 64.0,
-        onPressed: AudioService.play,
-      );
-
-  IconButton pauseButton() => IconButton(
-        icon: Icon(Icons.pause),
-        iconSize: 64.0,
-        onPressed: AudioService.pause,
-      );
-
-  IconButton stopButton() => IconButton(
-        icon: Icon(Icons.stop),
-        iconSize: 64.0,
-        onPressed: AudioService.stop,
-      );
-
-  Widget positionIndicator(MediaItem mediaItem, PlaybackState state) {
-    double seekPos;
-    return StreamBuilder(
-      stream: Rx.combineLatest2<double, double, double>(
-          _dragPositionSubject.stream,
-          Stream.periodic(Duration(milliseconds: 200)),
-          (dragPosition, _) => dragPosition),
-      builder: (context, snapshot) {
-        double position =
-            snapshot.data ?? state.currentPosition.inMilliseconds.toDouble();
-        double duration = mediaItem?.duration?.inMilliseconds?.toDouble();
-        return Column(
-          children: [
-            if (duration != null)
-              Slider(
-                min: 0.0,
-                max: duration,
-                value: seekPos ?? max(0.0, min(position, duration)),
-                onChanged: (value) {
-                  _dragPositionSubject.add(value);
-                },
-                onChangeEnd: (value) {
-                  AudioService.seekTo(Duration(milliseconds: value.toInt()));
-                  // Due to a delay in platform channel communication, there is
-                  // a brief moment after releasing the Slider thumb before the
-                  // new position is broadcast from the platform side. This
-                  // hack is to hold onto seekPos until the next state update
-                  // comes through.
-                  // TODO: Improve this code.
-                  seekPos = value;
-                  _dragPositionSubject.add(null);
-                },
-              ),
-            Text("${state.currentPosition}"),
-          ],
-        );
-      },
-    );
+  Future<String> getImageFileFromAssets() async {
+    if (defaultCover != '') return defaultCover;
+    final file =
+        File('${(await getTemporaryDirectory()).path}/images/placeholder.jpg');
+    defaultCover = file.path;
+    if (await file.exists()) return file.path;
+    final byteData = await rootBundle.load('assets/images/placeholder.jpg');
+    await file.writeAsBytes(byteData.buffer
+        .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+    return file.path;
   }
-}
 
-class ScreenState {
-  final List<MediaItem> queue;
-  final MediaItem mediaItem;
-  final PlaybackState playbackState;
-
-  ScreenState(this.queue, this.mediaItem, this.playbackState);
-}
-
-// NOTE: Your entrypoint MUST be a top-level function.
-void _audioPlayerTaskEntrypoint() async {
-  AudioServiceBackground.run(() => AudioPlayerTask());
-}
-
-/// This task defines logic for playing a list of podcast episodes.
-class AudioPlayerTask extends BackgroundAudioTask {
-  final _mediaLibrary = MediaLibrary();
-  AudioPlayer _player = new AudioPlayer();
-  AudioProcessingState _skipState;
-  Seeker _seeker;
-  StreamSubscription<PlaybackEvent> _eventSubscription;
-
-  List<MediaItem> get queue => _mediaLibrary.items;
-  int get index => _player.currentIndex;
-  MediaItem get mediaItem => index == null ? null : queue[index];
-
-  @override
-  Future<void> onStart(Map<String, dynamic> params) async {
-    // We configure the audio session for speech since we're playing a podcast.
-    // You can also put this in your app's initialisation if your app doesn't
-    // switch between two types of audio as this example does.
-    final session = await AudioSession.instance;
-    await session.configure(AudioSessionConfiguration.speech());
-    // Broadcast media item changes.
-    _player.currentIndexStream.listen((index) {
-      if (index != null) AudioServiceBackground.setMediaItem(queue[index]);
+  void setOffValues(List response) {
+    getTemporaryDirectory().then((tempDir) async {
+      final file = File(
+          '${(await getTemporaryDirectory()).path}/images/placeholder.jpg');
+      if (!await file.exists()) {
+        final byteData = await rootBundle.load('assets/images/placeholder.jpg');
+        await file.writeAsBytes(byteData.buffer
+            .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+      }
+      for (int i = 0; i < response.length; i++) {
+        globalQueue.add(await setTags(response[i] as Map, tempDir));
+      }
     });
-    // Propagate all events from the audio player to AudioService clients.
-    _eventSubscription = _player.playbackEventStream.listen((event) {
-      _broadcastState();
-    });
-    // Special processing for state transitions.
-    _player.processingStateStream.listen((state) {
-      switch (state) {
-        case ProcessingState.completed:
-          // In this example, the service stops when reaching the end.
-          onStop();
+  }
+
+  void setValues(List response) {
+    for (var element in response) {
+      var part = element['duration'].toString();
+      if (part.contains(':')) {
+        element['duration'] =
+            int.parse(part.split(':')[0]) * 60 + int.parse(part.split(':')[1]);
+      }
+    }
+    globalQueue.addAll(
+      response.map((song) {
+        return MediaItemConverter().mapToMediaItem(song as Map);
+      }),
+    );
+    fetched = true;
+  }
+
+  Future<void> updateNplay() async {
+    await audioHandler.updateQueue(globalQueue);
+    await audioHandler.skipToQueueItem(globalIndex);
+    await audioHandler.play();
+    if (enforceRepeat) {
+      switch (repeatMode) {
+        case 'None':
+          audioHandler.setRepeatMode(AudioServiceRepeatMode.none);
           break;
-        case ProcessingState.ready:
-          // If we just came from skipping between tracks, clear the skip
-          // state now that we're ready to play.
-          _skipState = null;
+        case 'All':
+          audioHandler.setRepeatMode(AudioServiceRepeatMode.all);
+          break;
+        case 'One':
+          audioHandler.setRepeatMode(AudioServiceRepeatMode.one);
           break;
         default:
           break;
       }
-    });
-
-    // Load and broadcast the queue
-    AudioServiceBackground.setQueue(queue);
-    try {
-      await _player.load(ConcatenatingAudioSource(
-        children:
-            queue.map((item) => AudioSource.uri(Uri.parse(item.id))).toList(),
-      ));
-      // In this example, we automatically start playing on start.
-      onPlay();
-    } catch (e) {
-      print("Error: $e");
-      onStop();
     }
   }
 
   @override
-  Future<void> onSkipToQueueItem(String mediaId) async {
-    // Then default implementations of onSkipToNext and onSkipToPrevious will
-    // delegate to this method.
-    final newIndex = queue.indexWhere((item) => item.id == mediaId);
-    if (newIndex == -1) return;
-    // During a skip, the player may enter the buffering state. We could just
-    // propagate that state directly to AudioService clients but AudioService
-    // has some more specific states we could use for skipping to next and
-    // previous. This variable holds the preferred state to send instead of
-    // buffering during a skip, and it is cleared as soon as the player exits
-    // buffering (see the listener in onStart).
-    _skipState = newIndex > index
-        ? AudioProcessingState.skippingToNext
-        : AudioProcessingState.skippingToPrevious;
-    // This jumps to the beginning of the queue item at newIndex.
-    _player.seek(Duration.zero, index: newIndex);
-  }
-
-  @override
-  Future<void> onPlay() => _player.play();
-
-  @override
-  Future<void> onPause() => _player.pause();
-
-  @override
-  Future<void> onSeekTo(Duration position) => _player.seek(position);
-
-  @override
-  Future<void> onFastForward() => _seekRelative(fastForwardInterval);
-
-  @override
-  Future<void> onRewind() => _seekRelative(-rewindInterval);
-
-  @override
-  Future<void> onSeekForward(bool begin) async => _seekContinuously(begin, 1);
-
-  @override
-  Future<void> onSeekBackward(bool begin) async => _seekContinuously(begin, -1);
-
-  @override
-  Future<void> onStop() async {
-    await _player.pause();
-    await _player.dispose();
-    _eventSubscription.cancel();
-    // It is important to wait for this state to be broadcast before we shut
-    // down the task. If we don't, the background task will be destroyed before
-    // the message gets sent to the UI.
-    await _broadcastState();
-    // Shut down this task
-    await super.onStop();
-  }
-
-  /// Jumps away from the current position by [offset].
-  Future<void> _seekRelative(Duration offset) async {
-    var newPosition = _player.position + offset;
-    // Make sure we don't jump out of bounds.
-    if (newPosition < Duration.zero) newPosition = Duration.zero;
-    if (newPosition > mediaItem.duration) newPosition = mediaItem.duration;
-    // Perform the jump via a seek.
-    await _player.seek(newPosition);
-  }
-
-  /// Begins or stops a continuous seek in [direction]. After it begins it will
-  /// continue seeking forward or backward by 10 seconds within the audio, at
-  /// intervals of 1 second in app time.
-  void _seekContinuously(bool begin, int direction) {
-    _seeker?.stop();
-    if (begin) {
-      _seeker = Seeker(_player, Duration(seconds: 10 * direction),
-          Duration(seconds: 1), mediaItem)
-        ..start();
+  Widget build(BuildContext context) {
+    BuildContext? scaffoldContext;
+    final Map data = widget.data;
+    if (response == data['response'] && globalIndex == data['index']) {
+      same = true;
     }
-  }
-
-  /// Broadcasts the current state to all clients.
-  Future<void> _broadcastState() async {
-    await AudioServiceBackground.setState(
-      controls: [
-        MediaControl.skipToPrevious,
-        if (_player.playing) MediaControl.pause else MediaControl.play,
-        MediaControl.stop,
-        MediaControl.skipToNext,
-      ],
-      systemActions: [
-        MediaAction.seekTo,
-        MediaAction.seekForward,
-        MediaAction.seekBackward,
-      ],
-      processingState: _getProcessingState(),
-      playing: _player.playing,
-      position: _player.position,
-      bufferedPosition: _player.bufferedPosition,
-      speed: _player.speed,
-    );
-  }
-
-  /// Maps just_audio's processing state into into audio_service's playing
-  /// state. If we are in the middle of a skip, we use [_skipState] instead.
-  AudioProcessingState _getProcessingState() {
-    if (_skipState != null) return _skipState;
-    switch (_player.processingState) {
-      case ProcessingState.none:
-        return AudioProcessingState.stopped;
-      case ProcessingState.loading:
-        return AudioProcessingState.connecting;
-      case ProcessingState.buffering:
-        return AudioProcessingState.buffering;
-      case ProcessingState.ready:
-        return AudioProcessingState.ready;
-      case ProcessingState.completed:
-        return AudioProcessingState.completed;
-      default:
-        throw Exception("Invalid state: ${_player.processingState}");
-    }
-  }
-}
-
-/// Provides access to a library of media items. In your app, this could come
-/// from a database or web service.
-class MediaLibrary {
-  final _items = <MediaItem>[
-    MediaItem(
-      id: "https://s3.amazonaws.com/scifri-episodes/scifri20181123-episode.mp3",
-      album: "Science Friday",
-      title: "A Salute To Head-Scratching Science",
-      artist: "Science Friday and WNYC Studios",
-      duration: Duration(milliseconds: 5739820),
-      artUri:
-          "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg",
-    ),
-    MediaItem(
-      id: "https://s3.amazonaws.com/scifri-segments/scifri201711241.mp3",
-      album: "Science Friday",
-      title: "From Cat Rheology To Operatic Incompetence",
-      artist: "Science Friday and WNYC Studios",
-      duration: Duration(milliseconds: 2856950),
-      artUri:
-          "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg",
-    ),
-  ];
-
-  List<MediaItem> get items => _items;
-}
-
-// NOTE: Your entrypoint MUST be a top-level function.
-void _textToSpeechTaskEntrypoint() async {
-  AudioServiceBackground.run(() => TextPlayerTask());
-}
-
-/// This task defines logic for speaking a sequence of numbers using
-/// text-to-speech.
-class TextPlayerTask extends BackgroundAudioTask {
-  Tts _tts = Tts();
-  bool _finished = false;
-  Sleeper _sleeper = Sleeper();
-  Completer _completer = Completer();
-  bool _interrupted = false;
-
-  bool get _playing => AudioServiceBackground.state.playing;
-
-  @override
-  Future<void> onStart(Map<String, dynamic> params) async {
-    // flutter_tts resets the AVAudioSession category to playAndRecord and the
-    // options to defaultToSpeaker whenever this background isolate is loaded,
-    // so we need to set our preferred audio session configuration here after
-    // that has happened.
-    final session = await AudioSession.instance;
-    await session.configure(AudioSessionConfiguration.speech());
-    // Handle audio interruptions.
-    session.interruptionEventStream.listen((event) {
-      if (event.begin) {
-        if (_playing) {
-          onPause();
-          _interrupted = true;
-        }
+    response = data['response'] as List;
+    globalIndex = data['index'] as int;
+    if (data['offline'] == null) {
+      if (audioHandler.mediaItem.value?.extras!['url'].startsWith('http')
+          as bool) {
+        offline = false;
       } else {
-        switch (event.type) {
-          case AudioInterruptionType.pause:
-          case AudioInterruptionType.duck:
-            if (!_playing && _interrupted) {
-              onPlay();
-            }
-            break;
-          case AudioInterruptionType.unknown:
-            break;
+        offline = true;
+      }
+    } else {
+      offline = data['offline'] as bool;
+    }
+    if (!fetched) {
+      if (response.isEmpty || same) {
+        fromMiniplayer = true;
+      } else {
+        fromMiniplayer = false;
+        if (!enforceRepeat) {
+          repeatMode = 'None';
+          Hive.box('settings').put('repeatMode', repeatMode);
         }
-        _interrupted = false;
-      }
-    });
-    // Handle unplugged headphones.
-    session.becomingNoisyEventStream.listen((_) {
-      if (_playing) onPause();
-    });
-
-    // Start playing.
-    await _playPause();
-    for (var i = 1; i <= 10 && !_finished;) {
-      AudioServiceBackground.setMediaItem(mediaItem(i));
-      AudioServiceBackground.androidForceEnableMediaButtons();
-      try {
-        await _tts.speak('$i');
-        i++;
-        await _sleeper.sleep(Duration(milliseconds: 300));
-      } catch (e) {
-        // Speech was interrupted
-      }
-      // If we were just paused
-      if (!_finished && !_playing) {
-        try {
-          // Wait to be unpaused
-          await _sleeper.sleep();
-        } catch (e) {
-          // unpaused
+        shuffle = false;
+        Hive.box('settings').put('shuffle', shuffle);
+        if (offline) {
+          setOffValues(response);
+          updateNplay();
+        } else {
+          setValues(response);
+          updateNplay();
         }
       }
     }
-    await AudioServiceBackground.setState(
-      controls: [],
-      processingState: AudioProcessingState.stopped,
-      playing: false,
+    return Dismissible(
+      direction: DismissDirection.down,
+      background: Container(color: Colors.transparent),
+      key: const Key('playScreen'),
+      onDismissed: (direction) {
+        Navigator.pop(context);
+      },
+      child: SafeArea(
+        child: StreamBuilder<MediaItem?>(
+            stream: audioHandler.mediaItem,
+            builder: (context, snapshot) {
+              final MediaItem? mediaItem = snapshot.data;
+              if (mediaItem == null) return const SizedBox();
+              return Scaffold(
+                backgroundColor: Colorss.dark,
+                appBar: AppBar(
+                  elevation: 0,
+                  backgroundColor: Colors.transparent,
+                  centerTitle: true,
+                  leading: IconButton(
+                      icon: const Icon(Icons.expand_more_rounded),
+                      color: Theme.of(context).iconTheme.color,
+                      tooltip: 'Back',
+                      onPressed: () {
+                        Navigator.pop(context);
+                      }),
+                  actions: [
+                    if (!offline)
+                      IconButton(
+                          icon: const Icon(Icons.share_rounded),
+                          tooltip: 'Share',
+                          onPressed: () {
+                            Share.share(
+                                mediaItem.extras!['perma_url'].toString());
+                          }),
+                    PopupMenuButton(
+                      icon: Icon(
+                        Icons.more_vert_rounded,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.all(Radius.circular(15.0))),
+                      onSelected: (int? value) {
+                        if (value == 0) {}
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                            value: 0,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.playlist_add_rounded,
+                                  color: Theme.of(context).iconTheme.color,
+                                ),
+                                const SizedBox(width: 10.0),
+                                const Text('Add to playlist'),
+                              ],
+                            )),
+                      ],
+                    )
+                  ],
+                ),
+                body: Builder(builder: (BuildContext context) {
+                  scaffoldContext = context;
+                  return LayoutBuilder(builder:
+                      (BuildContext context, BoxConstraints constraints) {
+                    if (constraints.maxWidth > constraints.maxHeight) {
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // title and controls
+                          SizedBox(
+                            width: constraints.maxWidth / 2,
+                            child: NameNControls(
+                              mediaItem,
+                              offline: offline,
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                    return Column(
+                      children: [
+                        // Artwork
+
+                        // title and controls
+                        Expanded(
+                          child: NameNControls(
+                            mediaItem,
+                            offline: offline,
+                          ),
+                        ),
+                      ],
+                    );
+                  });
+                }),
+              );
+            }),
+      ),
     );
-    if (!_finished) {
-      onStop();
-    }
-    _completer.complete();
-  }
-
-  @override
-  Future<void> onPlay() => _playPause();
-
-  @override
-  Future<void> onPause() => _playPause();
-
-  @override
-  Future<void> onStop() async {
-    // Signal the speech to stop
-    _finished = true;
-    _sleeper.interrupt();
-    _tts.interrupt();
-    // Wait for the speech to stop
-    await _completer.future;
-    // Shut down this task
-    await super.onStop();
-  }
-
-  MediaItem mediaItem(int number) => MediaItem(
-      id: 'tts_$number',
-      album: 'Numbers',
-      title: 'Number $number',
-      artist: 'Sample Artist');
-
-  Future<void> _playPause() async {
-    if (_playing) {
-      _interrupted = false;
-      await AudioServiceBackground.setState(
-        controls: [MediaControl.play, MediaControl.stop],
-        processingState: AudioProcessingState.ready,
-        playing: false,
-      );
-      _sleeper.interrupt();
-      _tts.interrupt();
-    } else {
-      final session = await AudioSession.instance;
-      // flutter_tts doesn't activate the session, so we do it here. This
-      // allows the app to stop other apps from playing audio while we are
-      // playing audio.
-      if (await session.setActive(true)) {
-        // If we successfully activated the session, set the state to playing
-        // and resume playback.
-        await AudioServiceBackground.setState(
-          controls: [MediaControl.pause, MediaControl.stop],
-          processingState: AudioProcessingState.ready,
-          playing: true,
-        );
-        _sleeper.interrupt();
-      }
-    }
   }
 }
 
-/// An object that performs interruptable sleep.
-class Sleeper {
-  Completer _blockingCompleter;
+class MediaState {
+  final MediaItem? mediaItem;
+  final Duration position;
 
-  /// Sleep for a duration. If sleep is interrupted, a
-  /// [SleeperInterruptedException] will be thrown.
-  Future<void> sleep([Duration duration]) async {
-    _blockingCompleter = Completer();
-    if (duration != null) {
-      await Future.any([Future.delayed(duration), _blockingCompleter.future]);
-    } else {
-      await _blockingCompleter.future;
-    }
-    final interrupted = _blockingCompleter.isCompleted;
-    _blockingCompleter = null;
-    if (interrupted) {
-      throw SleeperInterruptedException();
-    }
-  }
+  MediaState(this.mediaItem, this.position);
+}
 
-  /// Interrupt any sleep that's underway.
-  void interrupt() {
-    if (_blockingCompleter?.isCompleted == false) {
-      _blockingCompleter.complete();
-    }
+class PositionData {
+  final Duration position;
+  final Duration bufferedPosition;
+  final Duration duration;
+
+  PositionData(this.position, this.bufferedPosition, this.duration);
+}
+
+class QueueState {
+  static const QueueState empty =
+      QueueState([], 0, [], AudioServiceRepeatMode.none);
+
+  final List<MediaItem> queue;
+  final int? queueIndex;
+  final List<int>? shuffleIndices;
+  final AudioServiceRepeatMode repeatMode;
+
+  const QueueState(
+      this.queue, this.queueIndex, this.shuffleIndices, this.repeatMode);
+
+  bool get hasPrevious =>
+      repeatMode != AudioServiceRepeatMode.none || (queueIndex ?? 0) > 0;
+  bool get hasNext =>
+      repeatMode != AudioServiceRepeatMode.none ||
+      (queueIndex ?? 0) + 1 < queue.length;
+
+  List<int> get indices =>
+      shuffleIndices ?? List.generate(queue.length, (i) => i);
+}
+
+class ControlButtons extends StatelessWidget {
+  final AudioPlayerHandler audioHandler;
+  final bool shuffle;
+  final bool miniplayer;
+
+  const ControlButtons(this.audioHandler,
+      {this.shuffle = false, this.miniplayer = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          StreamBuilder<QueueState>(
+            stream: audioHandler.queueState,
+            builder: (context, snapshot) {
+              final queueState = snapshot.data ?? QueueState.empty;
+              return IconButton(
+                color: currentTheme.currentTheme() == ThemeMode.dark
+                    ? Colors.grey[200]
+                    : Colors.grey[800],
+                icon: const Icon(Icons.skip_previous_rounded),
+                iconSize: miniplayer ? 24.0 : 45.0,
+                tooltip: 'Skip Previous',
+                onPressed:
+                    queueState.hasPrevious ? audioHandler.skipToPrevious : null,
+              );
+            },
+          ),
+          SizedBox(
+            height: miniplayer ? 40.0 : 65.0,
+            width: miniplayer ? 40.0 : 65.0,
+            child: StreamBuilder<PlaybackState>(
+                stream: audioHandler.playbackState,
+                builder: (context, snapshot) {
+                  final playbackState = snapshot.data;
+                  final processingState = playbackState?.processingState;
+                  final playing = playbackState?.playing ?? false;
+                  return Stack(
+                    children: [
+                      if (processingState == AudioProcessingState.loading ||
+                          processingState == AudioProcessingState.buffering)
+                        Center(
+                          child: SizedBox(
+                            height: miniplayer ? 40.0 : 65.0,
+                            width: miniplayer ? 40.0 : 65.0,
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Theme.of(context).accentColor),
+                            ),
+                          ),
+                        ),
+                      if (miniplayer)
+                        Center(
+                          child: playing
+                              ? IconButton(
+                                  color: currentTheme.currentTheme() ==
+                                          ThemeMode.dark
+                                      ? Colors.grey[200]!
+                                      : Colors.grey[800]!,
+                                  tooltip: 'Pause',
+                                  onPressed: audioHandler.pause,
+                                  icon: const Icon(
+                                    Icons.pause_rounded,
+                                  ),
+                                )
+                              : IconButton(
+                                  color: currentTheme.currentTheme() ==
+                                          ThemeMode.dark
+                                      ? Colors.grey[200]!
+                                      : Colors.grey[800]!,
+                                  tooltip: 'Play',
+                                  onPressed: audioHandler.play,
+                                  icon: const Icon(
+                                    Icons.play_arrow_rounded,
+                                  ),
+                                ),
+                        )
+                      else
+                        Center(
+                          child: SizedBox(
+                              height: 59,
+                              width: 59,
+                              child: Center(
+                                child: playing
+                                    ? FloatingActionButton(
+                                        elevation: 10,
+                                        tooltip: 'Pause',
+                                        onPressed: audioHandler.pause,
+                                        child: const Icon(
+                                          Icons.pause_rounded,
+                                          size: 40.0,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : FloatingActionButton(
+                                        elevation: 10,
+                                        tooltip: 'Play',
+                                        onPressed: audioHandler.play,
+                                        child: const Icon(
+                                          Icons.play_arrow_rounded,
+                                          size: 40.0,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                              )),
+                        ),
+                    ],
+                  );
+                }),
+          ),
+          StreamBuilder<QueueState>(
+            stream: audioHandler.queueState,
+            builder: (context, snapshot) {
+              final queueState = snapshot.data ?? QueueState.empty;
+              return IconButton(
+                color: currentTheme.currentTheme() == ThemeMode.dark
+                    ? Colors.grey[200]
+                    : Colors.grey[800],
+                icon: const Icon(Icons.skip_next_rounded),
+                iconSize: miniplayer ? 24.0 : 45.0,
+                tooltip: 'Skip Next',
+                onPressed: queueState.hasNext ? audioHandler.skipToNext : null,
+              );
+            },
+          ),
+        ]);
   }
 }
 
-class SleeperInterruptedException {}
-
-/// A wrapper around FlutterTts that makes it easier to wait for speech to
-/// complete.
-class Tts {
-  final FlutterTts _flutterTts = new FlutterTts();
-  Completer _speechCompleter;
-  bool _interruptRequested = false;
-  bool _playing = false;
-
-  Tts() {
-    _flutterTts.setCompletionHandler(() {
-      _speechCompleter?.complete();
-    });
-  }
-
-  bool get playing => _playing;
-
-  Future<void> speak(String text) async {
-    _playing = true;
-    if (!_interruptRequested) {
-      _speechCompleter = Completer();
-      await _flutterTts.speak(text);
-      await _speechCompleter.future;
-      _speechCompleter = null;
-    }
-    _playing = false;
-    if (_interruptRequested) {
-      _interruptRequested = false;
-      throw TtsInterruptedException();
-    }
-  }
-
-  Future<void> stop() async {
-    if (_playing) {
-      await _flutterTts.stop();
-      _speechCompleter?.complete();
-    }
-  }
-
-  void interrupt() {
-    if (_playing) {
-      _interruptRequested = true;
-      stop();
-    }
-  }
+abstract class AudioPlayerHandler implements AudioHandler {
+  Stream<QueueState> get queueState;
+  Future<void> moveQueueItem(int currentIndex, int newIndex);
+  ValueStream<double> get volume;
+  Future<void> setVolume(double volume);
+  ValueStream<double> get speed;
 }
 
-class TtsInterruptedException {}
-
-class Seeker {
-  final AudioPlayer player;
-  final Duration positionInterval;
-  final Duration stepInterval;
+class NameNControls extends StatelessWidget {
   final MediaItem mediaItem;
-  bool _running = false;
+  final bool offline;
+  final audioHandler = getIt<AudioPlayerHandler>();
+  NameNControls(this.mediaItem, {this.offline = false});
 
-  Seeker(
-    this.player,
-    this.positionInterval,
-    this.stepInterval,
-    this.mediaItem,
-  );
+  Stream<Duration> get _bufferedPositionStream => audioHandler.playbackState
+      .map((state) => state.bufferedPosition)
+      .distinct();
+  Stream<Duration?> get _durationStream =>
+      audioHandler.mediaItem.map((item) => item?.duration).distinct();
+  Stream<PositionData> get _positionDataStream =>
+      Rx.combineLatest3<Duration, Duration, Duration?, PositionData>(
+          AudioService.position,
+          _bufferedPositionStream,
+          _durationStream,
+          (position, bufferedPosition, duration) => PositionData(
+              position, bufferedPosition, duration ?? Duration.zero));
 
-  start() async {
-    _running = true;
-    while (_running) {
-      Duration newPosition = player.position + positionInterval;
-      if (newPosition < Duration.zero) newPosition = Duration.zero;
-      if (newPosition > mediaItem.duration) newPosition = mediaItem.duration;
-      player.seek(newPosition);
-      await Future.delayed(stepInterval);
-    }
-  }
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        /// Title and subtitle
+        Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(35, 5, 35, 0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  /// Title container
+                  Text(
+                    mediaItem.title.trim(),
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontSize: 35,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber,
+                    ),
+                  ),
 
-  stop() {
-    _running = false;
+                  /// Subtitle container
+                  Text(
+                    mediaItem.artist ?? 'Unknown',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.w500),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        /// Seekbar starts from here
+        StreamBuilder<PositionData>(
+          stream: _positionDataStream,
+          builder: (context, snapshot) {
+            final positionData = snapshot.data ??
+                PositionData(Duration.zero, Duration.zero,
+                    mediaItem.duration ?? Duration.zero);
+            return SeekBar(
+              duration: positionData.duration,
+              position: positionData.position,
+              bufferedPosition: positionData.bufferedPosition,
+              onChangeEnd: (newPosition) {
+                audioHandler.seek(newPosition);
+              },
+            );
+          },
+        ),
+
+        /// Final row starts from here
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                children: [
+                  const SizedBox(height: 6.0),
+                  StreamBuilder<bool>(
+                    stream: audioHandler.playbackState
+                        .map((state) =>
+                            state.shuffleMode == AudioServiceShuffleMode.all)
+                        .distinct(),
+                    builder: (context, snapshot) {
+                      final shuffleModeEnabled = snapshot.data ?? false;
+                      return IconButton(
+                        icon: shuffleModeEnabled
+                            ? Icon(Icons.shuffle,
+                                color: Theme.of(context).accentColor)
+                            : const Icon(
+                                Icons.shuffle,
+                              ),
+                        tooltip: 'Shuffle',
+                        onPressed: () async {
+                          final enable = !shuffleModeEnabled;
+                          await audioHandler.setShuffleMode(enable
+                              ? AudioServiceShuffleMode.all
+                              : AudioServiceShuffleMode.none);
+                        },
+                      );
+                    },
+                  ),
+                  // if (!offline) LikeButton(mediaItem: mediaItem, size: 25.0)
+                ],
+              ),
+              ControlButtons(audioHandler),
+              Column(
+                children: [
+                  const SizedBox(height: 6.0),
+                  StreamBuilder<AudioServiceRepeatMode>(
+                    stream: audioHandler.playbackState
+                        .map((state) => state.repeatMode)
+                        .distinct(),
+                    builder: (context, snapshot) {
+                      final repeatMode =
+                          snapshot.data ?? AudioServiceRepeatMode.none;
+                      const texts = ['None', 'All', 'One'];
+                      final icons = [
+                        const Icon(
+                          Icons.repeat_rounded,
+                        ),
+                        Icon(Icons.repeat_rounded,
+                            color: Theme.of(context).accentColor),
+                        Icon(Icons.repeat_one_rounded,
+                            color: Theme.of(context).accentColor),
+                      ];
+                      const cycleModes = [
+                        AudioServiceRepeatMode.none,
+                        AudioServiceRepeatMode.all,
+                        AudioServiceRepeatMode.one,
+                      ];
+                      final index = cycleModes.indexOf(repeatMode);
+                      return IconButton(
+                        icon: icons[index],
+                        tooltip: 'Repeat ${texts[(index + 1) % texts.length]}',
+                        onPressed: () {
+                          Hive.box('settings').put(
+                              'repeatMode', texts[(index + 1) % texts.length]);
+                          audioHandler.setRepeatMode(cycleModes[
+                              (cycleModes.indexOf(repeatMode) + 1) %
+                                  cycleModes.length]);
+                        },
+                      );
+                    },
+                  ),
+                  if (!offline)
+                    DownloadButton(data: {
+                      'id': mediaItem.id.toString(),
+                      'artist': mediaItem.artist,
+                      'album': mediaItem.album,
+                      'image': mediaItem.artUri.toString(),
+                      'duration': mediaItem.duration?.inSeconds.toString(),
+                      'title': mediaItem.title.toString(),
+                      'url': mediaItem.extras!['url'].toString(),
+                    })
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
- 
-*/
+
+
+
+
+
+
+
+
+
+
+
+// 
+
+
+
+// 

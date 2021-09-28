@@ -1,3 +1,4 @@
+import 'package:aidar_zakaz/all_about_audio/format.dart';
 import 'package:aidar_zakaz/models/lecture_model.dart';
 import 'package:aidar_zakaz/services/base_client.dart';
 import 'package:get/get.dart';
@@ -5,14 +6,8 @@ import 'package:get/get.dart';
 import 'base_controller.dart';
 
 class CategoryDetailController extends GetxController with BaseController {
-  // @override
-  // void onClose() {
-  //   getIt<PageManager>().dispose();
-  //   print('onclose');
-  //   super.onClose();
-  // }
+  List<dynamic> _lecturesC = [];
 
-  final List<LectureModel> _lecturesC = [];
   get lecturesC => _lecturesC;
   var isLoading = false;
   fetchLecOfCategories(int id) async {
@@ -20,11 +15,15 @@ class CategoryDetailController extends GetxController with BaseController {
     var response =
         await BaseClient().get('/api/v1/category/$id').catchError(handleError);
     if (response == null) return;
-    final List<LectureModel> loadedLectures = [];
-    for (var lec in response['lectures']) {
-      loadedLectures.add(LectureModel.fromJson(lec));
-    }
-    _lecturesC.assignAll(loadedLectures);
+    // final List<LectureModel> loadedLectures = [];
+    final List<dynamic> loadedLectures = response['lectures'] as List<dynamic>;
+
+    // for (var lec in response['lectures']) {
+    //   loadedLectures.add(LectureModel.fromJson(lec));
+    // }
+
+    _lecturesC =
+        await FormatResponse().formatSongsResponse(loadedLectures, 'playlist');
     isLoading = false;
     update();
   }

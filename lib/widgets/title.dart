@@ -22,7 +22,6 @@ class Titlee extends StatelessWidget {
                 fontFamily: 'IBM Plex Sans',
                 fontStyle: FontStyle.italic,
                 fontSize: 21,
-                color: Colors.white,
                 fontWeight: FontWeight.w800,
               ),
             ),

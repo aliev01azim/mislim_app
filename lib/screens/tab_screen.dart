@@ -1,8 +1,11 @@
 import 'package:aidar_zakaz/controllers/home_screen_controller.dart';
 import 'package:aidar_zakaz/screens/home_screen.dart';
 import 'package:aidar_zakaz/screens/search_screen.dart';
+import 'package:aidar_zakaz/screens/setting.dart';
 import 'package:aidar_zakaz/utils/colors.dart';
+import 'package:aidar_zakaz/utils/theme.dart';
 import 'package:aidar_zakaz/widgets/bottom_bar.dart';
+import 'package:aidar_zakaz/widgets/miniplayer.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -15,20 +18,22 @@ class TabScreen extends StatelessWidget {
     const HomeScreen(),
     const SearchScreen(),
     const LibraryScreen(),
-    // PremiumScreen(),
+    SettingPage(),
   ];
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = currentTheme.currentTheme() == ThemeMode.dark;
+
     return Scaffold(
       body: SafeArea(
         child: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: RadialGradient(
               colors: [
-                Colorss.primary,
-                Colorss.dark,
+                currentTheme.currentColor().withOpacity(0.5),
+                isDarkMode ? Colorss.dark : Colors.white
               ],
-              center: Alignment(-1, -2.3),
+              center: const Alignment(-1, -2.3),
               radius: 1.5,
             ),
           ),
@@ -40,38 +45,47 @@ class TabScreen extends StatelessWidget {
           ),
         ),
       ),
+      bottomSheet: SafeArea(
+        child: MiniPlayer(),
+      ),
       bottomNavigationBar: GetBuilder<HomeScreenController>(
         builder: (controller) {
-          return CustomAnimatedBottomBar(
-            containerHeight: 70,
-            backgroundColor: Colorss.dark,
-            selectedIndex: controller.selectedIndex,
-            showElevation: true,
-            itemCornerRadius: 24,
-            curve: Curves.easeIn,
-            onItemSelected: (val) => controller.changePage(val),
-            items: <BottomNavyBarItem>[
-              BottomNavyBarItem(
-                icon: const Icon(Icons.home_rounded),
-                title: const Text('Главная'),
-                activeColor: Colors.green,
-              ),
-              BottomNavyBarItem(
-                icon: const Icon(Icons.search_rounded),
-                title: const Text('Поиск'),
-                activeColor: Colors.cyan,
-              ),
-              BottomNavyBarItem(
-                icon: const Icon(Icons.library_music_rounded),
-                title: const Text('Моя медиатека'),
-                activeColor: Colors.amberAccent,
-              ),
-              BottomNavyBarItem(
-                icon: const Icon(Icons.settings),
-                title: const Text('Настройки'),
-                activeColor: Colors.brown[300]!,
-              ),
-            ],
+          return SafeArea(
+            child: CustomAnimatedBottomBar(
+              containerHeight: 60,
+              selectedIndex: controller.selectedIndex,
+              showElevation: true,
+              backgroundColor: isDarkMode ? Colorss.dark : Colors.white,
+              itemCornerRadius: 24,
+              curve: Curves.easeIn,
+              onItemSelected: (val) => controller.changePage(val),
+              items: <BottomNavyBarItem>[
+                BottomNavyBarItem(
+                  icon: const Icon(Icons.home_rounded),
+                  title: const Text('Главная'),
+                  activeColor: Colors.green,
+                  inactiveColor: !isDarkMode ? Colors.grey[800] : Colors.white,
+                ),
+                BottomNavyBarItem(
+                  icon: const Icon(Icons.search_rounded),
+                  title: const Text('Поиск'),
+                  activeColor: Colors.cyan,
+                  inactiveColor: !isDarkMode ? Colors.grey[800] : Colors.white,
+                ),
+                BottomNavyBarItem(
+                  icon: const Icon(Icons.library_music_rounded),
+                  title: const Text('Моя медиатека'),
+                  activeColor: Colors.amberAccent,
+                  inactiveColor: !isDarkMode ? Colors.grey[800] : Colors.white,
+                ),
+                BottomNavyBarItem(
+                  icon: const Icon(Icons.settings),
+                  title: const Text('Настройки'),
+                  activeColor: Colors.brown[300]!,
+                  inactiveColor: !isDarkMode ? Colors.grey[800] : Colors.white,
+                ),
+              ],
+            ),
           );
         },
       ),

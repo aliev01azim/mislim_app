@@ -15,6 +15,10 @@ class HomeScreenController extends GetxController with BaseController {
     update();
   }
 
+  void updateTree() {
+    update();
+  }
+
   //
   late final Box<CategoryModel> _favoriteCategories =
       Hive.box<CategoryModel>('favorite_categories');
