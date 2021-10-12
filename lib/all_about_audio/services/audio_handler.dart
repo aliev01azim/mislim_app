@@ -4,6 +4,7 @@ import 'package:aidar_zakaz/controllers/base_controller.dart';
 import 'package:aidar_zakaz/screens/audio_screen.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:rxdart/rxdart.dart';
@@ -13,11 +14,15 @@ import '../mediaitem_converter.dart';
 Future<AudioPlayerHandler> initAudioService() async {
   return await AudioService.init(
     builder: () => AudioPlayerHandlerImpl(),
-    config: const AudioServiceConfig(
+    config: AudioServiceConfig(
       androidNotificationChannelId: 'com.example.aidar_zakaz.audio',
-      androidNotificationChannelName: 'Audio Service Demo',
+      androidNotificationChannelName: 'Islamic lectures',
       androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
+      androidStopForegroundOnPause: Hive.box('settings')
+          .get('stopServiceOnPause', defaultValue: true) as bool,
+      androidNotificationIcon: 'drawable/ic_stat_music_note',
+      androidShowNotificationBadge: true,
+      notificationColor: Colors.grey[900],
     ),
   );
 }
@@ -28,15 +33,15 @@ class AudioPlayerHandlerImpl extends BaseAudioHandler
   final converter = MediaItemConverter();
   late AudioPlayer? _player;
   int? count;
-
   int? index;
-
   final _playlist = ConcatenatingAudioSource(children: []);
+  final _mediaItemExpando = Expando<MediaItem>();
+
   @override
   final BehaviorSubject<double> volume = BehaviorSubject.seeded(1.0);
+
   @override
   final BehaviorSubject<double> speed = BehaviorSubject.seeded(1.0);
-  final _mediaItemExpando = Expando<MediaItem>();
 
   Stream<List<IndexedAudioSource>> get _effectiveSequence => Rx.combineLatest3<
               List<IndexedAudioSource>?,
@@ -91,8 +96,22 @@ class AudioPlayerHandlerImpl extends BaseAudioHandler
     await session.configure(const AudioSessionConfiguration.music());
     await startService();
 
-    final List recentList = await Hive.box('recentlyPlayed')
-        .get('recentSongs', defaultValue: [])?.toList() as List;
+    // final byteData =
+    //     await rootBundle.loadString('assets/images/placeholder.jpg');
+    final List recentList =
+        await Hive.box('recentlyPlayed').get('recentSongs', defaultValue: [
+      {
+        'id': '1',
+        'album': 'pop',
+        'artist': "azimus",
+        'duration': 203,
+        'title': 'kachaet',
+        'image': 'https://clipart-best.com/img/islam/islam-clip-art-31.png',
+        'isFavorite': 'false',
+        'url':
+            "http://allahakbar.pythonanywhere.com/media/HVME_-_GOOSEBUMPS.mp3",
+      }
+    ])?.toList();
     final List<MediaItem> lastQueue =
         recentList.map((e) => converter.mapToMediaItem(e as Map)).toList();
     await updateQueue(lastQueue);
@@ -142,10 +161,8 @@ class AudioPlayerHandlerImpl extends BaseAudioHandler
   }
 
   AudioSource _itemToSource(MediaItem mediaItem) {
-    final audioSource = AudioSource.uri(
-        mediaItem.artUri.toString().startsWith('file:')
-            ? Uri.file(mediaItem.extras!['url'].toString())
-            : Uri.parse(mediaItem.extras!['url'].toString()));
+    final audioSource =
+        AudioSource.uri(Uri.parse(mediaItem.extras!['url'].toString()));
 
     _mediaItemExpando[audioSource] = mediaItem;
     return audioSource;
@@ -168,14 +185,20 @@ class AudioPlayerHandlerImpl extends BaseAudioHandler
   }
 
   Future<void> addRecentlyPlayed(MediaItem mediaitem) async {
-    if (mediaitem.artUri.toString().startsWith('file')) {
+    if (mediaitem.artUri.toString().startsWith('file') ||
+        mediaitem.artUri == null ||
+        mediaitem.id == '1') {
       return;
     }
     List recentList = await Hive.box('recentlyPlayed')
         .get('recentSongs', defaultValue: [])?.toList() as List;
-
     final Map item = converter.mediaItemtoMap(mediaitem);
-    recentList.insert(0, item);
+    if (recentList.any((element) => element['id'] == mediaitem.id)) {
+      recentList.removeWhere((element) => element['id'] == mediaitem.id);
+      recentList.insert(0, item);
+    } else {
+      recentList.insert(0, item);
+    }
 
     final jsonList = recentList.map((item) => jsonEncode(item)).toList();
     final uniqueJsonList = jsonList.toSet().toList();
@@ -258,6 +281,7 @@ class AudioPlayerHandlerImpl extends BaseAudioHandler
   }
 
   @override
+  // ignore: avoid_renaming_method_parameters
   Future<void> setShuffleMode(AudioServiceShuffleMode mode) async {
     final enabled = mode == AudioServiceShuffleMode.all;
     if (enabled) {

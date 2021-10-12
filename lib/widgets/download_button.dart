@@ -1,4 +1,5 @@
 import 'package:aidar_zakaz/all_about_audio/services/download.dart';
+import 'package:aidar_zakaz/screens/tab_screen.dart';
 import 'package:aidar_zakaz/widgets/snackbar.dart';
 import 'package:flutter/material.dart';
 
@@ -34,7 +35,7 @@ class _DownloadButtonState extends State<DownloadButton> {
                   icon: Icon(widget.icon == 'download'
                       ? Icons.download_done_rounded
                       : Icons.save_alt),
-                  tooltip: 'Download Done',
+                  tooltip: 'Скачано',
                   color: Theme.of(context).accentColor,
                   iconSize: 25.0,
                   onPressed: () {},
@@ -47,7 +48,7 @@ class _DownloadButtonState extends State<DownloadButton> {
                               : Icons.save_alt),
                           iconSize: 25.0,
                           color: Theme.of(context).iconTheme.color,
-                          tooltip: 'Download',
+                          tooltip: 'Скачать',
                           onPressed: () {
                             down.prepareDownload(context, widget.data);
                           }))
@@ -107,70 +108,71 @@ class _MultiDownloadButtonState extends State<MultiDownloadButton> {
       width: 50,
       height: 50,
       child: Center(
-          child: (down.lastDownloadId == widget.data.last['id'])
-              ? IconButton(
-                  icon: const Icon(
-                    Icons.download_done_rounded,
+        child: (down.lastDownloadId == widget.data.last['id'])
+            ? IconButton(
+                icon: const Icon(
+                  Icons.download_done_rounded,
+                ),
+                color: Theme.of(context).accentColor,
+                iconSize: 25.0,
+                tooltip: 'Скачано',
+                onPressed: () {},
+              )
+            : down.progress == 0
+                ? Center(
+                    child: IconButton(
+                        icon: const Icon(
+                          Icons.save_alt_rounded,
+                        ),
+                        iconSize: 25.0,
+                        color: Theme.of(context).iconTheme.color,
+                        tooltip: 'Скачать',
+                        onPressed: () async {
+                          for (final items in widget.data) {
+                            down.prepareDownload(
+                              context,
+                              items as Map,
+                              createFolder: true,
+                              folderName: widget.playlistName,
+                            );
+                            await _waitUntilDone(items['id'].toString());
+                            setState(() {
+                              done++;
+                            });
+                          }
+                        }))
+                : Stack(
+                    children: [
+                      Center(
+                        child: Text(down.progress == null
+                            ? '0%'
+                            : '${(100 * down.progress!).round()}%'),
+                      ),
+                      Center(
+                        child: SizedBox(
+                          height: 35,
+                          width: 35,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).accentColor),
+                            value: down.progress == 1 ? null : down.progress,
+                          ),
+                        ),
+                      ),
+                      Center(
+                        child: SizedBox(
+                          height: 30,
+                          width: 30,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).accentColor),
+                            value: done / widget.data.length,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  color: Theme.of(context).accentColor,
-                  iconSize: 25.0,
-                  tooltip: 'Download Done',
-                  onPressed: () {},
-                )
-              : down.progress == 0
-                  ? Center(
-                      child: IconButton(
-                          icon: const Icon(
-                            Icons.save_alt_rounded,
-                          ),
-                          iconSize: 25.0,
-                          color: Theme.of(context).iconTheme.color,
-                          tooltip: 'Download',
-                          onPressed: () async {
-                            for (final items in widget.data) {
-                              down.prepareDownload(
-                                context,
-                                items as Map,
-                                createFolder: true,
-                                folderName: widget.playlistName,
-                              );
-                              await _waitUntilDone(items['id'].toString());
-                              setState(() {
-                                done++;
-                              });
-                            }
-                          }))
-                  : Stack(
-                      children: [
-                        Center(
-                          child: Text(down.progress == null
-                              ? '0%'
-                              : '${(100 * down.progress!).round()}%'),
-                        ),
-                        Center(
-                          child: SizedBox(
-                            height: 35,
-                            width: 35,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Theme.of(context).accentColor),
-                              value: down.progress == 1 ? null : down.progress,
-                            ),
-                          ),
-                        ),
-                        Center(
-                          child: SizedBox(
-                            height: 30,
-                            width: 30,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Theme.of(context).accentColor),
-                              value: done / widget.data.length,
-                            ),
-                          ),
-                        ),
-                      ],
-                    )),
+      ),
     );
   }
 }
@@ -200,13 +202,6 @@ class _AlbumDownloadButtonState extends State<AlbumDownloadButton> {
     });
   }
 
-  Future<void> _waitUntilDone(String id) async {
-    while (down.lastDownloadId != id) {
-      await Future.delayed(const Duration(seconds: 1));
-    }
-    return;
-  }
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -220,7 +215,7 @@ class _AlbumDownloadButtonState extends State<AlbumDownloadButton> {
                   ),
                   color: Theme.of(context).accentColor,
                   iconSize: 25.0,
-                  tooltip: 'Download Done',
+                  tooltip: 'Скачано',
                   onPressed: () {},
                 )
               : down.progress == 0
@@ -231,12 +226,13 @@ class _AlbumDownloadButtonState extends State<AlbumDownloadButton> {
                           ),
                           iconSize: 25.0,
                           color: Theme.of(context).iconTheme.color,
-                          tooltip: 'Download',
+                          tooltip: 'Скачать',
                           onPressed: () async {
-                            ShowSnackBar().showSnackBar(
-                              context,
-                              'Downloading Album "${widget.albumName}"',
-                            );
+                            if (debugCheckHasScaffoldMessenger(context)) {
+                              ShowSnackBar().showSnackBar(
+                                'Downloading Album "${widget.albumName}"',
+                              );
+                            }
 
                             // data = await SaavnAPI()
                             //     .fetchAlbumSongs(widget.albumId);

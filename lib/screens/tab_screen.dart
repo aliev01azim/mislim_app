@@ -1,65 +1,105 @@
-import 'package:aidar_zakaz/controllers/home_screen_controller.dart';
+import 'dart:io';
+
+import 'package:aidar_zakaz/controllers/tabs_controller.dart';
+import 'package:aidar_zakaz/controllers/theme_controller.dart';
 import 'package:aidar_zakaz/screens/home_screen.dart';
 import 'package:aidar_zakaz/screens/search_screen.dart';
-import 'package:aidar_zakaz/screens/setting.dart';
-import 'package:aidar_zakaz/utils/colors.dart';
-import 'package:aidar_zakaz/utils/theme.dart';
+import 'package:aidar_zakaz/screens/setting_screen.dart';
 import 'package:aidar_zakaz/widgets/bottom_bar.dart';
 import 'package:aidar_zakaz/widgets/miniplayer.dart';
+import 'package:aidar_zakaz/widgets/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-import 'library/library_screen.dart';
+import 'library/library.dart';
 
 class TabScreen extends StatelessWidget {
   TabScreen({Key? key}) : super(key: key);
-
   final List<Widget> _widgetOptions = <Widget>[
     const HomeScreen(),
     const SearchScreen(),
-    const LibraryScreen(),
-    SettingPage(),
+    LibraryPage(),
+    const SettingPage(),
   ];
+
+  DateTime? backButtonPressTime;
+  Future<bool> handleWillPop(BuildContext context) async {
+    final now = DateTime.now();
+    final backButtonHasNotBeenPressedOrSnackBarHasBeenClosed =
+        backButtonPressTime == null ||
+            now.difference(backButtonPressTime!) > const Duration(seconds: 3);
+
+    if (backButtonHasNotBeenPressedOrSnackBarHasBeenClosed) {
+      backButtonPressTime = now;
+      ShowSnackBar().showSnackBar(
+        'Press Back Again to Exit App',
+        duration: const Duration(seconds: 2),
+        noAction: true,
+      );
+      return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
-    bool isDarkMode = currentTheme.currentTheme() == ThemeMode.dark;
+    bool isDarkMode =
+        Hive.box('settings').get('darkMode', defaultValue: true) as bool? ??
+            true;
 
     return Scaffold(
-      body: SafeArea(
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              colors: [
-                currentTheme.currentColor().withOpacity(0.5),
-                isDarkMode ? Colorss.dark : Colors.white
-              ],
-              center: const Alignment(-1, -2.3),
-              radius: 1.5,
-            ),
-          ),
-          child: GetBuilder<HomeScreenController>(
-            builder: (controller) {
-              return IndexedStack(
-                  index: controller.selectedIndex, children: _widgetOptions);
-            },
-          ),
+      body: WillPopScope(
+        onWillPop: () => handleWillPop(context),
+        child: SafeArea(
+          child: ValueListenableBuilder(
+              valueListenable: Hive.box('settings').listenable(),
+              child: GetBuilder<TabsController>(
+                init: TabsController(),
+                builder: (controller) {
+                  return IndexedStack(
+                      index: controller.selectedIndex,
+                      children: _widgetOptions);
+                },
+              ),
+              builder: (_, Box box, Widget? widget) {
+                return Container(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        colors: [
+                          (box.get('darkMode', defaultValue: true) as bool? ??
+                                  true)
+                              ? currentTheme.currentColor().withOpacity(0.5)
+                              : const Color.fromRGBO(250, 248, 249, 1),
+                          (box.get('darkMode', defaultValue: true) as bool? ??
+                                  true)
+                              ? currentTheme.getCanvasColor()
+                              : const Color.fromRGBO(250, 248, 249, 1)
+                        ],
+                        center: const Alignment(-1, -2.3),
+                        radius: 1.5,
+                      ),
+                    ),
+                    child: widget);
+              }),
         ),
       ),
       bottomSheet: SafeArea(
         child: MiniPlayer(),
       ),
-      bottomNavigationBar: GetBuilder<HomeScreenController>(
+      bottomNavigationBar: GetBuilder<TabsController>(
         builder: (controller) {
           return SafeArea(
             child: CustomAnimatedBottomBar(
               containerHeight: 60,
               selectedIndex: controller.selectedIndex,
               showElevation: true,
-              backgroundColor: isDarkMode ? Colorss.dark : Colors.white,
               itemCornerRadius: 24,
               curve: Curves.easeIn,
-              onItemSelected: (val) => controller.changePage(val),
-              items: <BottomNavyBarItem>[
+              onItemSelected: (val) {
+                controller.changePage(val);
+              },
+              items: [
                 BottomNavyBarItem(
                   icon: const Icon(Icons.home_rounded),
                   title: const Text('Главная'),

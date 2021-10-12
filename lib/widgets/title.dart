@@ -1,5 +1,8 @@
+import 'package:aidar_zakaz/controllers/theme_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class Titlee extends StatelessWidget {
   const Titlee(this.title, {Key? key}) : super(key: key);
@@ -9,26 +12,31 @@ class Titlee extends StatelessWidget {
     return Column(
       children: [
         const SizedBox(
-          height: 30,
+          height: 15,
         ),
         Row(
           children: [
             const SizedBox(
               width: 20,
             ),
-            Text(
-              title,
-              style: const TextStyle(
-                fontFamily: 'IBM Plex Sans',
-                fontStyle: FontStyle.italic,
-                fontSize: 21,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
+            ValueListenableBuilder(
+                valueListenable: Hive.box('settings').listenable(),
+                builder: (_, Box box, __) {
+                  return Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.clip,
+                    style: TextStyle(
+                      fontSize: 21,
+                      fontWeight: FontWeight.w700,
+                      color: currentTheme.currentColor(),
+                    ),
+                  );
+                }),
           ],
         ),
         const SizedBox(
-          height: 25,
+          height: 0,
         ),
       ],
       crossAxisAlignment: CrossAxisAlignment.stretch,

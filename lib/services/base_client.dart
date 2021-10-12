@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'app_exceptions.dart';
 
 class BaseClient {
-  static const int timeoutDuration = 10;
+  static const int timeoutDuration = 20;
   static var client = http.Client();
   static const String baseUrl = 'https://allahakbar.pythonanywhere.com';
   //GET
@@ -19,7 +19,8 @@ class BaseClient {
     } on SocketException {
       throw FetchDataException('Нет интернет соединения', uri.toString());
     } on TimeoutException {
-      throw ApiNotRespondingException('Время истекло', uri.toString());
+      throw ApiNotRespondingException(
+          'Время соединения истекло', uri.toString());
     }
   }
 

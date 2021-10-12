@@ -1,21 +1,21 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:aidar_zakaz/all_about_audio/mediaitem_converter.dart';
+import 'package:aidar_zakaz/controllers/theme_controller.dart';
 import 'package:aidar_zakaz/services/service_locator.dart';
-import 'package:aidar_zakaz/utils/colors.dart';
-import 'package:aidar_zakaz/utils/theme.dart';
 import 'package:aidar_zakaz/widgets/download_button.dart';
 import 'package:aidar_zakaz/widgets/seekbar.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:rxdart/rxdart.dart';
+import 'package:rxdart/rxdart.dart' as rx;
 import 'package:share_plus/share_plus.dart';
+
+import 'category_screen.dart';
 
 class PlayScreen extends StatefulWidget {
   final Map data;
@@ -43,64 +43,25 @@ class _PlayScreenState extends State<PlayScreen> {
   List response = [];
   bool fetched = false;
   bool offline = false;
-  String defaultCover = '';
   final audioHandler = getIt<AudioPlayerHandler>();
 
-  Future<void> main() async {
-    await Hive.openBox('Favorite Songs');
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    main();
-  }
-
   Future<MediaItem> setTags(Map response, Directory tempDir) async {
-    String playTitle = response['title'].toString();
-
-    String playArtist = response['artist'].toString();
-
-    final String playAlbum = response['album'].toString();
-    final int playDuration =
-        int.parse(response['duration'].toString().split(':')[0]) * 60 +
-            int.parse(response['duration'].toString().split(':')[1]);
-
-    final String filePath = await getImageFileFromAssets();
     final MediaItem tempDict = MediaItem(
-        id: response['id'].toString(),
-        album: playAlbum,
-        duration: Duration(seconds: playDuration),
-        title: playTitle,
-        artist: playArtist,
-        artUri: Uri.file(filePath),
+        id: response['_id'].toString(),
+        album: response['album'].toString(),
+        duration: Duration(milliseconds: response['duration']),
+        title: response['title'].toString(),
+        artist: response['artist'].toString(),
+        artUri: Uri.parse(
+            'https://clipart-best.com/img/islam/islam-clip-art-31.png'),
         extras: {
-          'url': response['url'],
+          'url': response['_data'],
         });
     return tempDict;
   }
 
-  Future<String> getImageFileFromAssets() async {
-    if (defaultCover != '') return defaultCover;
-    final file =
-        File('${(await getTemporaryDirectory()).path}/images/placeholder.jpg');
-    defaultCover = file.path;
-    if (await file.exists()) return file.path;
-    final byteData = await rootBundle.load('assets/images/placeholder.jpg');
-    await file.writeAsBytes(byteData.buffer
-        .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
-    return file.path;
-  }
-
-  void setOffValues(List response) {
-    getTemporaryDirectory().then((tempDir) async {
-      final file = File(
-          '${(await getTemporaryDirectory()).path}/images/placeholder.jpg');
-      if (!await file.exists()) {
-        final byteData = await rootBundle.load('assets/images/placeholder.jpg');
-        await file.writeAsBytes(byteData.buffer
-            .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
-      }
+  Future<void> setOffValues(List response) async {
+    await getTemporaryDirectory().then((tempDir) async {
       for (int i = 0; i < response.length; i++) {
         globalQueue.add(await setTags(response[i] as Map, tempDir));
       }
@@ -146,6 +107,7 @@ class _PlayScreenState extends State<PlayScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: unused_local_variable
     BuildContext? scaffoldContext;
     final Map data = widget.data;
     if (response == data['response'] && globalIndex == data['index']) {
@@ -197,7 +159,6 @@ class _PlayScreenState extends State<PlayScreen> {
               final MediaItem? mediaItem = snapshot.data;
               if (mediaItem == null) return const SizedBox();
               return Scaffold(
-                backgroundColor: Colorss.dark,
                 appBar: AppBar(
                   elevation: 0,
                   backgroundColor: Colors.transparent,
@@ -205,7 +166,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   leading: IconButton(
                       icon: const Icon(Icons.expand_more_rounded),
                       color: Theme.of(context).iconTheme.color,
-                      tooltip: 'Back',
+                      tooltip: 'Назад',
                       onPressed: () {
                         Navigator.pop(context);
                       }),
@@ -213,54 +174,89 @@ class _PlayScreenState extends State<PlayScreen> {
                     if (!offline)
                       IconButton(
                           icon: const Icon(Icons.share_rounded),
-                          tooltip: 'Share',
+                          tooltip: 'Поделиться',
+                          color: Theme.of(context).iconTheme.color,
                           onPressed: () {
-                            Share.share(
-                                mediaItem.extras!['perma_url'].toString());
+                            Share.share(mediaItem.extras!['url'].toString());
                           }),
-                    PopupMenuButton(
-                      icon: Icon(
-                        Icons.more_vert_rounded,
-                        color: Theme.of(context).iconTheme.color,
-                      ),
-                      shape: const RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.all(Radius.circular(15.0))),
-                      onSelected: (int? value) {
-                        if (value == 0) {}
-                      },
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
+                    if (!offline)
+                      PopupMenuButton(
+                        icon: Icon(
+                          Icons.more_vert_rounded,
+                          color: Theme.of(context).iconTheme.color,
+                        ),
+                        onSelected: (value) {
+                          if (value == 0) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DetailScreen({
+                                  'id':
+                                      int.parse(mediaItem.extras!['artistId']),
+                                  'name': mediaItem.artist,
+                                  'isFavorite': mediaItem.extras!['isFavorite']
+                                }),
+                              ),
+                            );
+                          }
+                          if (value == 1) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DetailScreen({
+                                  'id': int.parse(
+                                      mediaItem.extras?['categoryId']),
+                                  'title': mediaItem.album,
+                                  'isFavorite': mediaItem.extras?['isFavorite'],
+                                }),
+                              ),
+                            );
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
                             value: 0,
                             child: Row(
                               children: [
                                 Icon(
-                                  Icons.playlist_add_rounded,
+                                  Icons.undo,
                                   color: Theme.of(context).iconTheme.color,
                                 ),
                                 const SizedBox(width: 10.0),
-                                const Text('Add to playlist'),
+                                const Text('Перейти к лектору'),
                               ],
-                            )),
-                      ],
-                    )
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 1,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.redo,
+                                  color: Theme.of(context).iconTheme.color,
+                                ),
+                                const SizedBox(width: 10.0),
+                                const Text('Перейти к теме'),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    if (offline) const SizedBox(),
                   ],
                 ),
                 body: Builder(builder: (BuildContext context) {
                   scaffoldContext = context;
-                  return LayoutBuilder(builder:
-                      (BuildContext context, BoxConstraints constraints) {
+                  return LayoutBuilder(
+                      builder: (_, BoxConstraints constraints) {
                     if (constraints.maxWidth > constraints.maxHeight) {
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          // title and controls
-                          SizedBox(
-                            width: constraints.maxWidth / 2,
-                            child: NameNControls(
-                              mediaItem,
-                              offline: offline,
-                            ),
+                          NameNControls(
+                            true,
+                            mediaItem,
+                            offline: offline,
                           ),
                         ],
                       );
@@ -268,10 +264,28 @@ class _PlayScreenState extends State<PlayScreen> {
                     return Column(
                       children: [
                         // Artwork
+                        Expanded(
+                          child: Center(
+                            child: Container(
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5),
+                                color: Colors.blueGrey[700],
+                              ),
+                              height: 200,
+                              width: 200,
+                              child: Icon(
+                                Icons.headphones,
+                                color: Colors.grey[300],
+                                size: 100,
+                              ),
+                            ),
+                          ),
+                        ),
 
-                        // title and controls
                         Expanded(
                           child: NameNControls(
+                            false,
                             mediaItem,
                             offline: offline,
                           ),
@@ -285,21 +299,6 @@ class _PlayScreenState extends State<PlayScreen> {
       ),
     );
   }
-}
-
-class MediaState {
-  final MediaItem? mediaItem;
-  final Duration position;
-
-  MediaState(this.mediaItem, this.position);
-}
-
-class PositionData {
-  final Duration position;
-  final Duration bufferedPosition;
-  final Duration duration;
-
-  PositionData(this.position, this.bufferedPosition, this.duration);
 }
 
 class QueueState {
@@ -348,7 +347,7 @@ class ControlButtons extends StatelessWidget {
                     : Colors.grey[800],
                 icon: const Icon(Icons.skip_previous_rounded),
                 iconSize: miniplayer ? 24.0 : 45.0,
-                tooltip: 'Skip Previous',
+                tooltip: 'Предыдущее',
                 onPressed:
                     queueState.hasPrevious ? audioHandler.skipToPrevious : null,
               );
@@ -358,83 +357,85 @@ class ControlButtons extends StatelessWidget {
             height: miniplayer ? 40.0 : 65.0,
             width: miniplayer ? 40.0 : 65.0,
             child: StreamBuilder<PlaybackState>(
-                stream: audioHandler.playbackState,
-                builder: (context, snapshot) {
-                  final playbackState = snapshot.data;
-                  final processingState = playbackState?.processingState;
-                  final playing = playbackState?.playing ?? false;
-                  return Stack(
-                    children: [
-                      if (processingState == AudioProcessingState.loading ||
-                          processingState == AudioProcessingState.buffering)
-                        Center(
-                          child: SizedBox(
-                            height: miniplayer ? 40.0 : 65.0,
-                            width: miniplayer ? 40.0 : 65.0,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Theme.of(context).accentColor),
-                            ),
+              stream: audioHandler.playbackState,
+              builder: (context, snapshot) {
+                final playbackState = snapshot.data;
+                final processingState = playbackState?.processingState;
+                final playing = playbackState?.playing ?? false;
+                return Stack(
+                  children: [
+                    if (processingState == AudioProcessingState.loading ||
+                        processingState == AudioProcessingState.buffering)
+                      Center(
+                        child: SizedBox(
+                          height: miniplayer ? 40.0 : 65.0,
+                          width: miniplayer ? 40.0 : 65.0,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).accentColor),
                           ),
                         ),
-                      if (miniplayer)
-                        Center(
-                          child: playing
-                              ? IconButton(
-                                  color: currentTheme.currentTheme() ==
-                                          ThemeMode.dark
-                                      ? Colors.grey[200]!
-                                      : Colors.grey[800]!,
-                                  tooltip: 'Pause',
-                                  onPressed: audioHandler.pause,
-                                  icon: const Icon(
-                                    Icons.pause_rounded,
-                                  ),
-                                )
-                              : IconButton(
-                                  color: currentTheme.currentTheme() ==
-                                          ThemeMode.dark
-                                      ? Colors.grey[200]!
-                                      : Colors.grey[800]!,
-                                  tooltip: 'Play',
-                                  onPressed: audioHandler.play,
-                                  icon: const Icon(
-                                    Icons.play_arrow_rounded,
-                                  ),
+                      ),
+                    if (miniplayer)
+                      Center(
+                        child: playing
+                            ? IconButton(
+                                color: currentTheme.currentTheme() ==
+                                        ThemeMode.dark
+                                    ? Colors.grey[200]!
+                                    : Colors.grey[800]!,
+                                tooltip: 'Пауза',
+                                onPressed: audioHandler.pause,
+                                icon: const Icon(
+                                  Icons.pause_rounded,
                                 ),
-                        )
-                      else
-                        Center(
-                          child: SizedBox(
-                              height: 59,
-                              width: 59,
-                              child: Center(
-                                child: playing
-                                    ? FloatingActionButton(
-                                        elevation: 10,
-                                        tooltip: 'Pause',
-                                        onPressed: audioHandler.pause,
-                                        child: const Icon(
-                                          Icons.pause_rounded,
-                                          size: 40.0,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : FloatingActionButton(
-                                        elevation: 10,
-                                        tooltip: 'Play',
-                                        onPressed: audioHandler.play,
-                                        child: const Icon(
-                                          Icons.play_arrow_rounded,
-                                          size: 40.0,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                              )),
+                              )
+                            : IconButton(
+                                color: currentTheme.currentTheme() ==
+                                        ThemeMode.dark
+                                    ? Colors.grey[200]!
+                                    : Colors.grey[800]!,
+                                tooltip: 'Слушать',
+                                onPressed: audioHandler.play,
+                                icon: const Icon(
+                                  Icons.play_arrow_rounded,
+                                ),
+                              ),
+                      )
+                    else
+                      Center(
+                        child: SizedBox(
+                          height: 59,
+                          width: 59,
+                          child: Center(
+                            child: playing
+                                ? FloatingActionButton(
+                                    elevation: 10,
+                                    tooltip: 'Пауза',
+                                    onPressed: audioHandler.pause,
+                                    child: const Icon(
+                                      Icons.pause_rounded,
+                                      size: 40.0,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : FloatingActionButton(
+                                    elevation: 10,
+                                    tooltip: 'Слушать',
+                                    onPressed: audioHandler.play,
+                                    child: const Icon(
+                                      Icons.play_arrow_rounded,
+                                      size: 40.0,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                          ),
                         ),
-                    ],
-                  );
-                }),
+                      ),
+                  ],
+                );
+              },
+            ),
           ),
           StreamBuilder<QueueState>(
             stream: audioHandler.queueState,
@@ -446,7 +447,7 @@ class ControlButtons extends StatelessWidget {
                     : Colors.grey[800],
                 icon: const Icon(Icons.skip_next_rounded),
                 iconSize: miniplayer ? 24.0 : 45.0,
-                tooltip: 'Skip Next',
+                tooltip: 'Слудующее',
                 onPressed: queueState.hasNext ? audioHandler.skipToNext : null,
               );
             },
@@ -455,19 +456,12 @@ class ControlButtons extends StatelessWidget {
   }
 }
 
-abstract class AudioPlayerHandler implements AudioHandler {
-  Stream<QueueState> get queueState;
-  Future<void> moveQueueItem(int currentIndex, int newIndex);
-  ValueStream<double> get volume;
-  Future<void> setVolume(double volume);
-  ValueStream<double> get speed;
-}
-
 class NameNControls extends StatelessWidget {
+  final bool isWidthMore;
   final MediaItem mediaItem;
   final bool offline;
   final audioHandler = getIt<AudioPlayerHandler>();
-  NameNControls(this.mediaItem, {this.offline = false});
+  NameNControls(this.isWidthMore, this.mediaItem, {this.offline = false});
 
   Stream<Duration> get _bufferedPositionStream => audioHandler.playbackState
       .map((state) => state.bufferedPosition)
@@ -475,7 +469,7 @@ class NameNControls extends StatelessWidget {
   Stream<Duration?> get _durationStream =>
       audioHandler.mediaItem.map((item) => item?.duration).distinct();
   Stream<PositionData> get _positionDataStream =>
-      Rx.combineLatest3<Duration, Duration, Duration?, PositionData>(
+      rx.Rx.combineLatest3<Duration, Duration, Duration?, PositionData>(
           AudioService.position,
           _bufferedPositionStream,
           _durationStream,
@@ -495,26 +489,43 @@ class NameNControls extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  /// Title container
-                  Text(
-                    mediaItem.title.trim(),
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    style: TextStyle(
-                      fontSize: 35,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.amber,
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width - 90,
+                    child: Center(
+                      child: SingleChildScrollView(
+                        clipBehavior: Clip.antiAliasWithSaveLayer,
+                        scrollDirection: Axis.horizontal,
+                        child: Text(
+                          mediaItem.title.trim(),
+                          style: const TextStyle(
+                            fontSize: 23,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.amber,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                        ),
+                      ),
                     ),
                   ),
-
-                  /// Subtitle container
-                  Text(
-                    mediaItem.artist ?? 'Unknown',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.w500),
-                    overflow: TextOverflow.ellipsis,
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width - 90,
+                    child: Center(
+                      child: SingleChildScrollView(
+                        clipBehavior: Clip.antiAliasWithSaveLayer,
+                        scrollDirection: Axis.horizontal,
+                        child: Text(
+                          mediaItem.artist ?? 'Неизвестно',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            height: 1.6,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -564,17 +575,54 @@ class NameNControls extends StatelessWidget {
                             : const Icon(
                                 Icons.shuffle,
                               ),
-                        tooltip: 'Shuffle',
+                        tooltip: 'Случайный выбор',
                         onPressed: () async {
                           final enable = !shuffleModeEnabled;
-                          await audioHandler.setShuffleMode(enable
-                              ? AudioServiceShuffleMode.all
-                              : AudioServiceShuffleMode.none);
+                          await audioHandler.setShuffleMode(
+                            enable
+                                ? AudioServiceShuffleMode.all
+                                : AudioServiceShuffleMode.none,
+                          );
                         },
                       );
                     },
                   ),
-                  // if (!offline) LikeButton(mediaItem: mediaItem, size: 25.0)
+                  if (!offline)
+                    ValueListenableBuilder(
+                        valueListenable: Hive.box('favorites').listenable(),
+                        builder: (_, Box box, ___) {
+                          return IconButton(
+                            onPressed: () async {
+                              mediaItem.extras!['isFavorite'] =
+                                  mediaItem.extras!['isFavorite'] == 'false'
+                                      ? 'true'
+                                      : 'false';
+                              final lectures =
+                                  box.get('likedLectures', defaultValue: [])
+                                      as List;
+                              if (mediaItem.extras!['isFavorite'] == 'true') {
+                                lectures.insert(
+                                    0,
+                                    MediaItemConverter()
+                                        .mediaItemtoMap(mediaItem));
+                                await box.put('likedLectures', lectures);
+                              } else {
+                                lectures.removeWhere(
+                                    (lec) => lec['id'] == mediaItem.id);
+                                await box.put('likedLectures', lectures);
+                              }
+                            },
+                            icon: mediaItem.extras!['isFavorite'] == 'true'
+                                ? Icon(
+                                    Icons.favorite,
+                                    color: currentTheme.currentColor(),
+                                  )
+                                : const Icon(
+                                    Icons.favorite_border,
+                                  ),
+                            tooltip: 'Добавить в Избранные лекции',
+                          );
+                        }),
                 ],
               ),
               ControlButtons(audioHandler),
@@ -588,7 +636,7 @@ class NameNControls extends StatelessWidget {
                     builder: (context, snapshot) {
                       final repeatMode =
                           snapshot.data ?? AudioServiceRepeatMode.none;
-                      const texts = ['None', 'All', 'One'];
+                      const texts = ['Отменить', 'Все', 'Один'];
                       final icons = [
                         const Icon(
                           Icons.repeat_rounded,
@@ -606,9 +654,9 @@ class NameNControls extends StatelessWidget {
                       final index = cycleModes.indexOf(repeatMode);
                       return IconButton(
                         icon: icons[index],
-                        tooltip: 'Repeat ${texts[(index + 1) % texts.length]}',
-                        onPressed: () {
-                          Hive.box('settings').put(
+                        tooltip: ' ${texts[(index + 1) % texts.length]}',
+                        onPressed: () async {
+                          await Hive.box('settings').put(
                               'repeatMode', texts[(index + 1) % texts.length]);
                           audioHandler.setRepeatMode(cycleModes[
                               (cycleModes.indexOf(repeatMode) + 1) %
@@ -618,15 +666,17 @@ class NameNControls extends StatelessWidget {
                     },
                   ),
                   if (!offline)
-                    DownloadButton(data: {
-                      'id': mediaItem.id.toString(),
-                      'artist': mediaItem.artist,
-                      'album': mediaItem.album,
-                      'image': mediaItem.artUri.toString(),
-                      'duration': mediaItem.duration?.inSeconds.toString(),
-                      'title': mediaItem.title.toString(),
-                      'url': mediaItem.extras!['url'].toString(),
-                    })
+                    DownloadButton(
+                      data: {
+                        'id': mediaItem.id.toString(),
+                        'artist': mediaItem.artist,
+                        'album': mediaItem.album,
+                        'image': mediaItem.artUri.toString(),
+                        'duration': mediaItem.duration?.inSeconds.toString(),
+                        'title': mediaItem.title.toString(),
+                        'url': mediaItem.extras!['url'].toString(),
+                      },
+                    ),
                 ],
               ),
             ],
@@ -637,18 +687,21 @@ class NameNControls extends StatelessWidget {
   }
 }
 
+//
+abstract class AudioPlayerHandler implements AudioHandler {
+  Stream<QueueState> get queueState;
+  Future<void> moveQueueItem(int currentIndex, int newIndex);
+  rx.ValueStream<double> get volume;
+  Future<void> setVolume(double volume);
+  rx.ValueStream<double> get speed;
+}
 
+//
 
+class PositionData {
+  final Duration position;
+  final Duration bufferedPosition;
+  final Duration duration;
 
-
-
-
-
-
-
-
-// 
-
-
-
-// 
+  PositionData(this.position, this.bufferedPosition, this.duration);
+}

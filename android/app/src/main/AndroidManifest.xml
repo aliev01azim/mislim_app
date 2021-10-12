@@ -3,6 +3,7 @@
    <application
         android:label="Islamic lectures"
         android:usesCleartextTraffic="true"
+        android:requestLegacyExternalStorage="true"
         android:icon="@mipmap/launcher_icon">
         <activity
             android:name="com.ryanheise.audioservice.AudioServiceActivity"
@@ -40,24 +41,11 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="app" android:host="blackhole" android:pathPrefix="/auth" />
+                <data android:scheme="app" android:host="aidar_zakaz" />
             </intent-filter>
 
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" android:host="jiosaavn.com" />
-                <data android:scheme="https" />
-            </intent-filter>
 
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" android:host="www.jiosaavn.com" />
-                <data android:scheme="https" />
-            </intent-filter>
+
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

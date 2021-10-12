@@ -1,12 +1,10 @@
-import 'dart:io';
-
+import 'package:aidar_zakaz/controllers/theme_controller.dart';
 import 'package:aidar_zakaz/screens/audio_screen.dart';
 import 'package:aidar_zakaz/services/service_locator.dart';
-import 'package:aidar_zakaz/utils/theme.dart';
 import 'package:audio_service/audio_service.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class MiniPlayer extends StatefulWidget {
   @override
@@ -15,7 +13,7 @@ class MiniPlayer extends StatefulWidget {
 
 class _MiniPlayerState extends State<MiniPlayer> {
   final audioHandler = getIt<AudioPlayerHandler>();
-  bool isDarkMode = currentTheme.currentTheme() == ThemeMode.dark;
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<PlaybackState>(
@@ -39,27 +37,8 @@ class _MiniPlayerState extends State<MiniPlayer> {
                   onDismissed: (_) {
                     audioHandler.stop();
                   },
-                  child: Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(7),
-                          boxShadow: [
-                            BoxShadow(
-                                color: !isDarkMode
-                                    ? Colors.grey[400]!
-                                    : Colors.grey[900]!,
-                                blurRadius: 2)
-                          ],
-                          gradient: LinearGradient(colors: [
-                            currentTheme.currentColor().withAlpha(100),
-                            isDarkMode
-                                ? const Color.fromRGBO(6, 18, 40, 1)
-                                : Colors.white,
-                            isDarkMode
-                                ? const Color.fromRGBO(6, 18, 40, 1)
-                                : Colors.white,
-                          ])),
-                      margin: const EdgeInsets.symmetric(horizontal: 7),
-                      height: 77,
+                  child: ValueListenableBuilder(
+                      valueListenable: Hive.box('settings').listenable(),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -91,47 +70,20 @@ class _MiniPlayerState extends State<MiniPlayer> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            leading: Hero(
-                              tag: 'currentArtwork',
-                              child: Card(
+                            leading: Card(
                                 elevation: 8,
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(7.0)),
                                 clipBehavior: Clip.antiAlias,
-                                child: (mediaItem.artUri
-                                        .toString()
-                                        .startsWith('file:'))
-                                    ? SizedBox(
-                                        height: 50.0,
-                                        width: 50.0,
-                                        child: Image(
-                                            fit: BoxFit.cover,
-                                            image: FileImage(File(mediaItem
-                                                .artUri!
-                                                .toFilePath()))),
-                                      )
-                                    : SizedBox(
-                                        height: 50.0,
-                                        width: 50.0,
-                                        child: CachedNetworkImage(
-                                            fit: BoxFit.cover,
-                                            errorWidget:
-                                                (BuildContext context, _, __) =>
-                                                    const Image(
-                                                      image: AssetImage(
-                                                          'assets/images/placeholder.jpg'),
-                                                    ),
-                                            placeholder:
-                                                (BuildContext context, _) =>
-                                                    const Image(
-                                                      image: AssetImage(
-                                                          'assets/images/placeholder.jpg'),
-                                                    ),
-                                            imageUrl:
-                                                'https://png.pngtree.com/element_our/20190603/ourlarge/pngtree-cartoon-black-headphones-illustration-image_1453847.jpg'),
-                                      ),
-                              ),
-                            ),
+                                child: const SizedBox(
+                                  height: 50.0,
+                                  width: 50.0,
+                                  child: Image(
+                                    fit: BoxFit.cover,
+                                    image: AssetImage(
+                                        'assets/images/placeholder.jpg'),
+                                  ),
+                                )),
                             trailing: ControlButtons(
                               audioHandler,
                               miniplayer: true,
@@ -164,9 +116,11 @@ class _MiniPlayerState extends State<MiniPlayer> {
                                             ),
                                             child: Slider(
                                               inactiveColor: Colors.transparent,
-                                              activeColor: isDarkMode
-                                                  ? Colors.white
-                                                  : Colors.grey[700],
+                                              activeColor:
+                                                  currentTheme.currentTheme() ==
+                                                          ThemeMode.dark
+                                                      ? Colors.white
+                                                      : Colors.grey[700],
                                               value:
                                                   position.inSeconds.toDouble(),
                                               max: mediaItem.duration!.inSeconds
@@ -183,7 +137,38 @@ class _MiniPlayerState extends State<MiniPlayer> {
                             height: 1,
                           ),
                         ],
-                      )),
+                      ),
+                      builder: (_, Box box, Widget? widget) {
+                        return Container(
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(7),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color: !(box.get('darkMode',
+                                                      defaultValue: true)
+                                                  as bool? ??
+                                              true)
+                                          ? Colors.grey[400]!
+                                          : Colors.grey[800]!,
+                                      blurRadius: 2)
+                                ],
+                                gradient: LinearGradient(colors: [
+                                  currentTheme.currentColor().withAlpha(100),
+                                  (box.get('darkMode', defaultValue: true)
+                                              as bool? ??
+                                          true)
+                                      ? currentTheme.getCanvasColor()
+                                      : Colors.white,
+                                  (box.get('darkMode', defaultValue: true)
+                                              as bool? ??
+                                          true)
+                                      ? currentTheme.getCanvasColor()
+                                      : Colors.white,
+                                ])),
+                            margin: const EdgeInsets.symmetric(horizontal: 7),
+                            height: 77,
+                            child: widget);
+                      }),
                 );
               });
         });

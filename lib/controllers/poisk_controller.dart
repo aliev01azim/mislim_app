@@ -1,8 +1,6 @@
 import 'dart:async';
+import 'package:aidar_zakaz/all_about_audio/format.dart';
 import 'package:aidar_zakaz/controllers/base_controller.dart';
-import 'package:aidar_zakaz/models/category_model.dart';
-import 'package:aidar_zakaz/models/lecture_model.dart';
-import 'package:aidar_zakaz/models/shahe_model.dart';
 import 'package:aidar_zakaz/services/base_client.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
@@ -26,32 +24,35 @@ class PoiskController extends GetxController with BaseController {
       controller.text = query.inCaps;
       controller.selection = TextSelection.fromPosition(
           TextPosition(offset: controller.text.length));
-      _zaderjka = Timer(const Duration(milliseconds: 300), () async {
+      _zaderjka = Timer(const Duration(milliseconds: 100), () async {
         if (tabIndex == 0) {
           var response =
               await BaseClient().get('/api/v1/search_lecture/?q=$query');
           if (response == null) return;
-          final List<LectureModel> loadedLectures = [];
+          final List loadedLectures = [];
           for (var lec in response['data']) {
-            loadedLectures.add(LectureModel.fromJson(lec));
+            loadedLectures.add(lec);
           }
-          filteredLectures.value = loadedLectures;
+          filteredLectures.value =
+              await FormatResponse().formatSongsResponse(loadedLectures);
         } else if (tabIndex == 1) {
           var response =
               await BaseClient().get('/api/v1/search_author/?q=$query');
           if (response == null) return;
-          final List<ShaheModel> loadedAuthors = [];
+          final List loadedAuthors = [];
           for (var author in response['data']) {
-            loadedAuthors.add(ShaheModel.fromJson(author));
+            (author as Map<String, dynamic>).addAll({'isFavorite': false});
+            loadedAuthors.add(author);
           }
           filteredAuthors.value = loadedAuthors;
         } else {
           var response =
               await BaseClient().get('/api/v1/search_category/?q=$query');
           if (response == null) return;
-          final List<CategoryModel> loadedCategories = [];
-          for (var author in response['data']) {
-            loadedCategories.add(CategoryModel.fromJson(author));
+          final List loadedCategories = [];
+          for (var category in response['data']) {
+            (category as Map<String, dynamic>).addAll({'isFavorite': false});
+            loadedCategories.add(category);
           }
           filteredCategories.value = loadedCategories;
         }

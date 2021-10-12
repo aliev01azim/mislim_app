@@ -45,14 +45,16 @@ class _SeekBarState extends State<SeekBar> {
       _dragValue = null;
     }
     return SizedBox(
+      height: 65,
       width: MediaQuery.of(context).size.width * 0.975,
       child: Stack(
         children: [
           SliderTheme(
             data: _sliderThemeData.copyWith(
               thumbShape: HiddenThumbComponentShape(),
-              activeTrackColor: Colors.white.withOpacity(0.5),
-              inactiveTrackColor: Colors.green.withOpacity(0.3),
+              activeTrackColor: Theme.of(context).accentColor.withOpacity(0.5),
+              inactiveTrackColor:
+                  Theme.of(context).accentColor.withOpacity(0.3),
               trackHeight: 4.0,
               // trackShape: RoundedRectSliderTrackShape(),
               trackShape: const RectangularSliderTrackShape(),
@@ -71,7 +73,7 @@ class _SeekBarState extends State<SeekBar> {
             data: _sliderThemeData.copyWith(
               inactiveTrackColor: Colors.transparent,
               activeTrackColor: Theme.of(context).accentColor,
-              thumbColor: Colors.white,
+              thumbColor: Theme.of(context).accentColor,
               trackHeight: 4.0,
             ),
             child: Slider(
@@ -104,7 +106,7 @@ class _SeekBarState extends State<SeekBar> {
                       .firstMatch('$_position')
                       ?.group(1) ??
                   '$_position',
-              // style: Theme.of(context).textTheme.caption,
+              style: const TextStyle(fontSize: 11),
             ),
           ),
           Positioned(
@@ -115,7 +117,7 @@ class _SeekBarState extends State<SeekBar> {
                       .firstMatch('$_duration')
                       ?.group(1) ??
                   '$_duration',
-              // style: Theme.of(context).textTheme.caption,
+              style: const TextStyle(fontSize: 11),
             ),
           ),
         ],

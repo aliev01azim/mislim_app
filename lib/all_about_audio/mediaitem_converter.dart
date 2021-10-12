@@ -7,13 +7,22 @@ class MediaItemConverter {
       'album': mediaItem.album.toString(),
       'artist': mediaItem.artist.toString(),
       'duration': mediaItem.duration?.inSeconds.toString(),
-      // 'image': mediaItem.artUri.toString(),
+      'image': mediaItem.artUri.toString(),
       'title': mediaItem.title.toString(),
       'url': mediaItem.extras!['url'].toString(),
+      'isFavorite': mediaItem.extras!['isFavorite'].toString(),
+      'artistId': mediaItem.extras!['artistId'].toString(),
+      'categoryId': mediaItem.extras!['categoryId'].toString(),
+      'categoryImage': mediaItem.extras!['categoryImage'].toString(),
     };
   }
 
   MediaItem mapToMediaItem(Map song) {
+    if (song['duration'].toString().contains(':')) {
+      song['duration'] =
+          int.parse(song['duration'].toString().split(':')[0]) * 60 +
+              int.parse(song['duration'].toString().split(':')[1]);
+    }
     return MediaItem(
         id: song['id'].toString(),
         album: song['album'],
@@ -25,13 +34,13 @@ class MediaItemConverter {
                   : song['duration'].toString()),
         ),
         title: song['title'],
-        // artUri: Uri.parse(song['image']
-        //     .toString()
-        //     .replaceAll('50x50', '500x500')
-        //     .replaceAll('150x150', '500x500')),
+        artUri: Uri.parse(song['image'].toString()),
         extras: {
           'url': song['url'],
-          // 'subtitle': song['subtitle'],
+          'isFavorite': song['isFavorite'].toString(),
+          'artistId': song['artistId'],
+          'categoryId': song['categoryId'],
+          'categoryImage': song['categoryImage'],
         });
   }
 }

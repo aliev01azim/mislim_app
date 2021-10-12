@@ -1,14 +1,9 @@
-import 'package:aidar_zakaz/bindings/category_detail_screen_binding.dart';
 import 'package:aidar_zakaz/controllers/poisk_controller.dart';
-import 'package:aidar_zakaz/models/category_model.dart';
-import 'package:aidar_zakaz/models/lecture_model.dart';
-import 'package:aidar_zakaz/models/shahe_model.dart';
 import 'package:aidar_zakaz/screens/audio_screen.dart';
-import 'package:aidar_zakaz/screens/category_detail_screen.dart';
-import 'package:aidar_zakaz/screens/category_shahe_detail_screen.dart';
-import 'package:aidar_zakaz/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import 'category_screen.dart';
 
 class PoiskScreen extends GetView<PoiskController> {
   const PoiskScreen({Key? key}) : super(key: key);
@@ -20,7 +15,6 @@ class PoiskScreen extends GetView<PoiskController> {
         appBar: AppBar(
           bottom: TabBar(
             labelPadding: const EdgeInsets.only(bottom: 10, top: 15),
-            indicatorColor: Colors.green,
             tabs: const [
               Text(
                 'Лекции',
@@ -45,7 +39,7 @@ class PoiskScreen extends GetView<PoiskController> {
                 style: const TextStyle(color: Colors.black),
                 decoration: InputDecoration(
                   hintText: 'Поиск',
-                  hintStyle: const TextStyle(color: Colorss.dark),
+                  hintStyle: const TextStyle(color: Colors.black87),
                   filled: true,
                   fillColor: Colors.white.withAlpha(235),
                   border: InputBorder.none,
@@ -87,49 +81,75 @@ class HistoryListTile extends StatelessWidget {
             return ListTile(
               onTap: () async {
                 if (item is! String) {
-                  controler.addSearchHistory(list[index].title);
-                  if (item is CategoryModel) {
-                    await Get.to(() => CategoryDetailScreen(item),
-                        binding: CategoryDetailScreenBinding());
+                  item['title'] != null
+                      ? controler.addSearchHistory(item['title'])
+                      : controler.addSearchHistory(item['name']);
+                  if (controler.tabIndex == 2) {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            DetailScreen(item as Map<dynamic, dynamic>),
+                      ),
+                    );
                   }
-                  if (item is LectureModel) {
-                    await Get.to(
-                        () => const PlayScreen(
-                              data: {
-                                'response': [],
-                                'index': 0,
-                                'offline': false,
-                              },
-                              fromMiniplayer: false,
-                            ),
-                        binding: CategoryDetailScreenBinding(),
-                        arguments: '');
+                  if (controler.tabIndex == 0) {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (___) => PlayScreen(
+                          data: {
+                            'response': list,
+                            'index': 0,
+                            'offline': false,
+                          },
+                          fromMiniplayer: false,
+                        ),
+                      ),
+                    );
                   }
-                  if (item is ShaheModel) {
-                    await Get.to(() => CategoryShaheDetailScreen(item),
-                        binding: CategoryDetailScreenBinding());
+                  if (controler.tabIndex == 1) {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            DetailScreen(item as Map<dynamic, dynamic>),
+                      ),
+                    );
                   }
                 } else {
-                  controler.search(list[index]);
+                  controler.search(item);
                 }
               },
               contentPadding: const EdgeInsets.only(left: 16, right: 0),
               trailing: item is String
                   ? IconButton(
                       onPressed: () => controler.deleteHistory(item),
-                      icon: const Icon(Icons.clear))
-                  : null,
+                      icon: const Icon(Icons.clear),
+                    )
+                  : item['duration'] != null
+                      ? Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: Text(
+                            item['duration'] is! int
+                                ? item['duration']
+                                : '${(item['duration'] / 60).floor().toString()}:${item['duration'] % 60}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        )
+                      : item['lectures'] != null
+                          ? Text(item['lectures'].length.toString())
+                          : null,
               leading: item is String ? const Icon(Icons.history) : null,
-              title: Text(
-                item is String ? item : item.title,
-                maxLines: 1,
-              ),
+              title: item is String
+                  ? Text(item, maxLines: 1)
+                  : item['lectures'] == null
+                      ? Text(item['title'], maxLines: 1)
+                      : item['title'] != null
+                          ? Text(item['title'], maxLines: 1)
+                          : Text(item['name'], maxLines: 1),
               subtitle: item is String
                   ? null
-                  : Text(
-                      item.title,
-                      maxLines: 1,
-                    ),
+                  : item['lectures'] == null
+                      ? Text(item['artist'], maxLines: 1)
+                      : null,
             );
           },
         ),

@@ -1,5 +1,7 @@
+import 'package:aidar_zakaz/controllers/theme_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:hive_flutter/adapters.dart';
 
 class CustomAnimatedBottomBar extends StatelessWidget {
   const CustomAnimatedBottomBar({
@@ -32,16 +34,19 @@ class CustomAnimatedBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = backgroundColor ?? Theme.of(context).bottomAppBarColor;
+    final bgColor = backgroundColor ?? Theme.of(context).canvasColor;
 
     return Container(
       decoration: BoxDecoration(
         color: bgColor,
         boxShadow: [
           if (showElevation)
-            const BoxShadow(
-              color: Colors.black12,
+            BoxShadow(
+              color: currentTheme.currentTheme() != ThemeMode.dark
+                  ? Colors.grey[400]!
+                  : Colors.grey[800]!,
               blurRadius: 2,
+              offset: const Offset(1, 1),
             ),
         ],
       ),
@@ -126,15 +131,24 @@ class _ItemWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                IconTheme(
-                  data: IconThemeData(
-                    size: iconSize,
-                    color: isSelected
-                        ? item.activeColor.withOpacity(1)
-                        : item.inactiveColor ?? item.activeColor,
-                  ),
-                  child: item.icon,
-                ),
+                ValueListenableBuilder(
+                    valueListenable: Hive.box('settings').listenable(),
+                    child: item.icon,
+                    builder: (_, Box box, Widget? widget) {
+                      return IconTheme(
+                        data: IconThemeData(
+                          size: iconSize,
+                          color: isSelected
+                              ? item.activeColor.withOpacity(1)
+                              : (box.get('darkMode', defaultValue: true)
+                                          as bool? ??
+                                      true)
+                                  ? Colors.white
+                                  : Colors.grey[800] ?? item.activeColor,
+                        ),
+                        child: widget!,
+                      );
+                    }),
                 if (isSelected)
                   Expanded(
                     child: Container(

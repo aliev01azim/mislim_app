@@ -1,40 +1,48 @@
-import 'package:aidar_zakaz/bindings/category_detail_screen_binding.dart';
-import 'package:aidar_zakaz/models/category_model.dart';
-import 'package:aidar_zakaz/screens/category_detail_screen.dart';
+import 'package:aidar_zakaz/screens/category_screen.dart';
+import 'package:aidar_zakaz/utils/card_colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
-
-import 'package:get/get.dart';
+import 'package:flutter/painting.dart';
 
 class LookGridItem extends StatelessWidget {
-  const LookGridItem(this.category, {Key? key}) : super(key: key);
-  final CategoryModel category;
+  const LookGridItem(this.category, this.index, {Key? key}) : super(key: key);
+  final Map category;
+  final int index;
   @override
   Widget build(BuildContext context) {
+    var gradientColor = GradientTemplate.gradientTemplate[index].colors;
     return InkWell(
-      onTap: () => Get.to(() => CategoryDetailScreen(category),
-          binding: CategoryDetailScreenBinding()),
+      onTap: () => Navigator.of(context).push(
+        PageRouteBuilder(
+          opaque: false,
+          pageBuilder: (_, __, ___) => DetailScreen(category),
+        ),
+      ),
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(5),
           gradient: LinearGradient(
-              colors: [
-                Color((math.Random().nextDouble() * 0xFFFFFF).toInt())
-                    .withOpacity(0.1),
-                Color((math.Random().nextDouble() * 0xFFFFFF).toInt())
-                    .withOpacity(1)
-              ],
-              tileMode: TileMode.clamp,
-              begin: const Alignment(0.4, 0),
-              transform: const GradientRotation(-90)),
+            colors: gradientColor,
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: gradientColor.last.withOpacity(0.4),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
         ),
         child: Center(
             child: Text(
-          category.title,
+          category['title'],
           style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Alisson'),
+              fontSize: 18,
+              fontFamily: 'IBM Plex Sans',
+              color: Colors.white,
+              fontWeight: FontWeight.bold),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,

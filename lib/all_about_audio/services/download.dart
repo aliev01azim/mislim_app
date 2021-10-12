@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:aidar_zakaz/screens/tab_screen.dart';
 import 'package:aidar_zakaz/widgets/snackbar.dart';
 import 'package:audiotagger/audiotagger.dart';
 import 'package:audiotagger/models/tag.dart';
@@ -16,12 +17,8 @@ class Download with ChangeNotifier {
   int? rememberOption;
   final ValueNotifier<bool> remember = ValueNotifier<bool>(false);
 
-  String downloadFormat = 'm4a';
-
   double? progress = 0.0;
   String lastDownloadId = '';
-  bool downloadLyrics =
-      Hive.box('settings').get('downloadLyrics', defaultValue: false) as bool;
 
   Future<void> prepareDownload(BuildContext context, Map data,
       {bool createFolder = false, String? folderName}) async {
@@ -40,8 +37,9 @@ class Download with ChangeNotifier {
     final RegExp avoid = RegExp(r'[\.\\\*\:\"\?#/;\|]');
     data['title'] = data['title'].toString().split('(From')[0].trim();
     String filename = '${data["title"]} - ${data["artist"]}';
-    String dlPath =
-        Hive.box('settings').get('downloadPath', defaultValue: '') as String;
+    String dlPath = Hive.box('settings').get('downloadPath',
+        defaultValue: "/storage/emulated/0/Music") as String;
+
     if (filename.length > 200) {
       final String temp = filename.substring(0, 200);
       final List tempList = temp.split(', ');
@@ -49,7 +47,7 @@ class Download with ChangeNotifier {
       filename = tempList.join(', ');
     }
 
-    filename = '${filename.replaceAll(avoid, "").replaceAll("  ", " ")}.m4a';
+    filename = '${filename.replaceAll(avoid, "").replaceAll("  ", " ")}.mp3';
     if (dlPath == '') {
       if (Platform.isWindows) {
         final Directory? temp = await getDownloadsDirectory();
@@ -60,13 +58,6 @@ class Download with ChangeNotifier {
         dlPath = temp!;
       }
     }
-    if (data['url'].toString().contains('google')) {
-      dlPath = '$dlPath/YouTube';
-      if (!await Directory(dlPath).exists()) {
-        await Directory(dlPath).create();
-      }
-    }
-
     if (createFolder && folderName != null) {
       final String foldername = folderName.replaceAll(avoid, '');
       dlPath = '$dlPath/$foldername';
@@ -74,7 +65,6 @@ class Download with ChangeNotifier {
         await Directory(dlPath).create();
       }
     }
-
     final bool exists = await File('$dlPath/$filename').exists();
     if (exists) {
       if (remember.value == true && rememberOption != null) {
@@ -87,7 +77,7 @@ class Download with ChangeNotifier {
             break;
           case 2:
             while (await File('$dlPath/$filename').exists()) {
-              filename = filename.replaceAll('.m4a', ' (1).m4a');
+              filename = filename.replaceAll('.mp3', ' (1).mp3');
             }
             break;
           default:
@@ -99,29 +89,15 @@ class Download with ChangeNotifier {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
+                insetPadding:
+                    EdgeInsets.symmetric(horizontal: 30.0, vertical: 24.0),
                 title: Text(
-                  'Already Exists',
+                  'Уже Скачано',
                   style: TextStyle(color: Theme.of(context).accentColor),
                 ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 400,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '"${data['title']}" already exists.\nDo you want to download it again?',
-                            softWrap: true,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                  ],
+                content: Text(
+                  '"${data['title']}" уже скачано.\nСкачать заново?',
+                  softWrap: true,
                 ),
                 actions: [
                   Column(
@@ -139,15 +115,16 @@ class Download with ChangeNotifier {
                                     remember.value = value ?? false;
                                   },
                                 ),
-                                const Text('Remember my choice'),
+                                const Text('Запомнить мой выбор'),
                               ],
                             );
                           }),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           TextButton(
                             style: TextButton.styleFrom(
+                              padding: const EdgeInsets.all(0),
                               primary: Theme.of(context).brightness ==
                                       Brightness.dark
                                   ? Colors.white
@@ -159,12 +136,14 @@ class Download with ChangeNotifier {
                               rememberOption = 0;
                             },
                             child: const Text(
-                              'No',
-                              style: TextStyle(color: Colors.white),
+                              'Нет',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 13),
                             ),
                           ),
                           TextButton(
                             style: TextButton.styleFrom(
+                              padding: const EdgeInsets.only(right: 4),
                               primary: Theme.of(context).brightness ==
                                       Brightness.dark
                                   ? Colors.white
@@ -175,9 +154,9 @@ class Download with ChangeNotifier {
                               downloadSong(context, dlPath, filename, data);
                               rememberOption = 1;
                             },
-                            child: const Text('Yes, but Replace Old'),
+                            child: const Text('Заменить старое',
+                                style: TextStyle(fontSize: 13)),
                           ),
-                          const SizedBox(width: 5.0),
                           TextButton(
                             style: TextButton.styleFrom(
                               primary: Colors.white,
@@ -187,12 +166,13 @@ class Download with ChangeNotifier {
                               Navigator.pop(context);
                               while (await File('$dlPath/$filename').exists()) {
                                 filename =
-                                    filename.replaceAll('.m4a', ' (1).m4a');
+                                    filename.replaceAll('.mp3', ' (1).mp3');
                               }
                               rememberOption = 2;
                               downloadSong(context, dlPath, filename, data);
                             },
-                            child: const Text('Yes'),
+                            child: const Text('Да',
+                                style: TextStyle(fontSize: 13)),
                           ),
                           const SizedBox(
                             width: 5,
@@ -219,7 +199,7 @@ class Download with ChangeNotifier {
     late String filepath2;
     String appPath;
     final List<int> _bytes = [];
-    final artname = filename.replaceAll('.m4a', 'artwork.jpg');
+    final artname = filename.replaceAll('.mp3', 'artwork.jpg');
     if (!Platform.isWindows) {
       final Directory appDir = await getApplicationDocumentsDirectory();
       appPath = appDir.path;
@@ -228,7 +208,7 @@ class Download with ChangeNotifier {
       appPath = temp!.path;
     }
     if (data['url'].toString().contains('google')) {
-      filename = filename.replaceAll('.m4a', '.opus');
+      filename = filename.replaceAll('.mp3', '.opus');
     }
     try {
       await File('$dlPath/$filename')
@@ -262,30 +242,20 @@ class Download with ChangeNotifier {
         recieved += value.length;
         progress = recieved / total;
         notifyListeners();
-      } catch (e) {}
+      } catch (e) {
+        rethrow;
+      }
     }).onDone(() async {
       final file = File(filepath!);
       await file.writeAsBytes(_bytes);
-
-      final HttpClientRequest request2 =
-          await HttpClient().getUrl(Uri.parse(data['image'].toString()));
-      final HttpClientResponse response2 = await request2.close();
-      final bytes2 = await consolidateHttpClientResponseBytes(response2);
       final File file2 = File(filepath2);
-
-      await file2.writeAsBytes(bytes2);
-
       debugPrint('Started tag editing');
       final Tag tag = Tag(
         title: data['title'].toString(),
         artist: data['artist'].toString(),
-        albumArtist: data['album_artist']?.toString() ??
-            data['artist']?.toString().split(', ')[0],
         artwork: filepath2.toString(),
         album: data['album'].toString(),
-        genre: data['language'].toString(),
-        year: data['year'].toString(),
-        comment: 'BlackHole',
+        comment: 'Islamic Lectures',
       );
       try {
         final tagger = Audiotagger();
@@ -305,7 +275,6 @@ class Download with ChangeNotifier {
       progress = 0.0;
       notifyListeners();
       ShowSnackBar().showSnackBar(
-        context,
         '"${data['title'].toString()}" has been downloaded',
       );
     });

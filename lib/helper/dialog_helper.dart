@@ -1,20 +1,21 @@
-import 'package:aidar_zakaz/utils/colors.dart';
+import 'package:aidar_zakaz/controllers/theme_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class DialogHelper {
   //show error dialog
   static void showErroDialog(
-      {String title = 'Error', String? description = 'Something went wrong'}) {
+      {String title = 'Ошибка',
+      String? description = 'Что-то пошло не так...'}) {
     Get.dialog(
       Dialog(
         elevation: 3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        backgroundColor: Colorss.dark,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 title,
@@ -22,6 +23,7 @@ class DialogHelper {
               ),
               Text(
                 description ?? '',
+                textAlign: TextAlign.center,
                 style: Get.textTheme.headline6,
               ),
               Center(
@@ -29,9 +31,10 @@ class DialogHelper {
                   onPressed: () {
                     if (Get.isDialogOpen!) Get.back();
                   },
-                  child: const Text(
+                  child: Text(
                     'Ok',
-                    style: TextStyle(color: Colorss.primary, fontSize: 20),
+                    style: TextStyle(
+                        fontSize: 20, color: currentTheme.currentColor()),
                   ),
                 ),
               ),
