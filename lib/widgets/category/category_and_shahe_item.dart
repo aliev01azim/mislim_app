@@ -1,6 +1,5 @@
 import 'package:aidar_zakaz/controllers/category_detail_controller.dart';
 import 'package:aidar_zakaz/screens/audio_screen.dart';
-import 'package:aidar_zakaz/screens/tab_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

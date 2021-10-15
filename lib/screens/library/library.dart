@@ -36,7 +36,7 @@ class LibraryPage extends StatelessWidget {
                   Navigator.push(
                     context,
                     CupertinoPageRoute(
-                      builder: (context) => Favorites(),
+                      builder: (context) => const Favorites(),
                     ),
                   );
                 },
@@ -48,7 +48,7 @@ class LibraryPage extends StatelessWidget {
                   Navigator.push(
                     context,
                     CupertinoPageRoute(
-                      builder: (context) => RecentlyPlayed(),
+                      builder: (context) => const RecentlyPlayed(),
                     ),
                   );
                 },

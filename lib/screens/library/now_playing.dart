@@ -28,7 +28,7 @@ class NowPlaying extends StatelessWidget {
                     backgroundColor:
                         Theme.of(context).brightness == Brightness.dark
                             ? Colors.transparent
-                            : Theme.of(context).accentColor,
+                            : Theme.of(context).colorScheme.secondary,
                     elevation: 0,
                   ),
             body: processingState == AudioProcessingState.idle
@@ -78,13 +78,13 @@ class NowPlaying extends StatelessWidget {
                                             (BuildContext context, _, __) =>
                                                 const Image(
                                           image: AssetImage(
-                                              'assets/placeholder.jpg'),
+                                              'assets/images/placeholder.jpg'),
                                         ),
                                         placeholder:
                                             (BuildContext context, _) =>
                                                 const Image(
                                           image: AssetImage(
-                                              'assets/placeholder.jpg'),
+                                              'assets/images/placeholder.jpg'),
                                         ),
                                         imageUrl: mediaItem.artUri!.toString(),
                                       ),
@@ -108,7 +108,7 @@ class NowPlaying extends StatelessWidget {
           );
         },
       ),
-      bottomSheet: SafeArea(
+      bottomSheet: const SafeArea(
         child: MiniPlayer(),
       ),
     );
@@ -119,7 +119,8 @@ class NowPlayingStream extends StatelessWidget {
   final AudioPlayerHandler audioHandler;
   final bool hideHeader;
 
-  const NowPlayingStream(this.audioHandler, {this.hideHeader = false});
+  const NowPlayingStream(this.audioHandler, {Key? key, this.hideHeader = false})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -149,7 +150,7 @@ class NowPlayingStream extends StatelessWidget {
                 audioHandler.removeQueueItemAt(index);
               },
               child: ListTileTheme(
-                selectedColor: Theme.of(context).accentColor,
+                selectedColor: Theme.of(context).colorScheme.secondary,
                 child: ListTile(
                   contentPadding:
                       const EdgeInsets.only(left: 16.0, right: 10.0),
@@ -175,7 +176,8 @@ class NowPlayingStream extends StatelessWidget {
                             height: 50.0,
                             width: 50.0,
                             child: Image(
-                              image: AssetImage('assets/cover.jpg'),
+                              image:
+                                  AssetImage('assets/images/placeholder.jpg'),
                             ),
                           )
                         : SizedBox(
@@ -185,11 +187,13 @@ class NowPlayingStream extends StatelessWidget {
                               fit: BoxFit.cover,
                               errorWidget: (BuildContext context, _, __) =>
                                   const Image(
-                                image: AssetImage('assets/cover.jpg'),
+                                image:
+                                    AssetImage('assets/images/placeholder.jpg'),
                               ),
                               placeholder: (BuildContext context, _) =>
                                   const Image(
-                                image: AssetImage('assets/cover.jpg'),
+                                image:
+                                    AssetImage('assets/images/placeholder.jpg'),
                               ),
                               imageUrl: queue[index].artUri.toString(),
                             ),

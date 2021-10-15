@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:aidar_zakaz/controllers/theme_controller.dart';
 import 'package:aidar_zakaz/services/service_locator.dart';
 import 'package:aidar_zakaz/widgets/miniplayer.dart';
 import 'package:audio_service/audio_service.dart';
@@ -93,7 +92,7 @@ class _DownloadedSongsState extends State<DownloadedSongs>
                 centerTitle: true,
                 backgroundColor: Theme.of(context).brightness == Brightness.dark
                     ? Colors.transparent
-                    : Theme.of(context).accentColor,
+                    : Theme.of(context).colorScheme.secondary,
                 elevation: 0,
               ),
               body: !added
@@ -104,7 +103,7 @@ class _DownloadedSongsState extends State<DownloadedSongs>
                           width: MediaQuery.of(context).size.width / 7,
                           child: CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
-                                Theme.of(context).accentColor),
+                                Theme.of(context).colorScheme.secondary),
                             strokeWidth: 5,
                           ),
                         ),
@@ -116,7 +115,7 @@ class _DownloadedSongsState extends State<DownloadedSongs>
                     ),
             ),
           ),
-          MiniPlayer(),
+          const MiniPlayer(),
         ],
       ),
     );
@@ -126,7 +125,8 @@ class _DownloadedSongsState extends State<DownloadedSongs>
 class SongsTab extends StatefulWidget {
   final List<SongModel> cachedSongs;
   final List<Map> cachedSongsMap;
-  SongsTab({Key? key, required this.cachedSongs, required this.cachedSongsMap})
+  const SongsTab(
+      {Key? key, required this.cachedSongs, required this.cachedSongsMap})
       : super(key: key);
 
   @override

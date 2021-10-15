@@ -135,7 +135,7 @@ class HistoryListTile extends StatelessWidget {
                           ),
                         )
                       : item['lectures'] != null
-                          ? Text(item['lectures'].length.toString())
+                          ? Text('${item['lectures'].length} лекций')
                           : null,
               leading: item is String ? const Icon(Icons.history) : null,
               title: item is String

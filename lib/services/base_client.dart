@@ -57,8 +57,7 @@ class BaseClient {
       throw BadRequestException(responseJson, response.request!.url.toString());
     } else {
       throw FetchDataException(
-          'Error occured with code : ${response.statusCode}',
-          response.request!.url.toString());
+          'Ошибка ${response.statusCode}', response.request!.url.toString());
     }
     // доработать?
     // else if (response.statusCode == 403) {

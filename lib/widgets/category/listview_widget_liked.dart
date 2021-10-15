@@ -8,32 +8,41 @@ class ListViewWidgetForLikedCategories extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-        valueListenable: Hive.box('favorites').listenable(),
-        builder: (_, Box box, Widget? widget) {
-          final items = box.get('likedCategories', defaultValue: []) as List;
-          return items.isNotEmpty
-              ? Column(
-                  children: [
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    SizedBox(
-                      height: 196,
-                      width: double.infinity,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.only(left: 10),
-                        controller: ScrollController(),
-                        itemCount: items.length,
-                        itemBuilder: (_, index) =>
-                            ListviewItem(items[index], true),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                  ],
-                )
+        valueListenable: Hive.box('settings').listenable(),
+        builder: (_, Box show, Widget? widget) {
+          return (show.get('showLikedCategories', defaultValue: true)
+                      as bool? ??
+                  true)
+              ? ValueListenableBuilder(
+                  valueListenable: Hive.box('favorites').listenable(),
+                  builder: (_, Box box, Widget? widget) {
+                    final items =
+                        box.get('likedCategories', defaultValue: []) as List;
+                    return items.isNotEmpty
+                        ? Column(
+                            children: [
+                              const SizedBox(
+                                height: 10,
+                              ),
+                              SizedBox(
+                                height: 196,
+                                width: double.infinity,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.only(left: 10),
+                                  controller: ScrollController(),
+                                  itemCount: items.length,
+                                  itemBuilder: (_, index) =>
+                                      ListviewItem(items[index], true),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 10,
+                              ),
+                            ],
+                          )
+                        : const SizedBox();
+                  })
               : const SizedBox();
         });
   }

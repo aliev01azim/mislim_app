@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:aidar_zakaz/controllers/tabs_controller.dart';
 import 'package:aidar_zakaz/controllers/theme_controller.dart';
 import 'package:aidar_zakaz/screens/home_screen.dart';
@@ -14,15 +12,16 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import 'library/library.dart';
 
+// ignore: must_be_immutable
 class TabScreen extends StatelessWidget {
   TabScreen({Key? key}) : super(key: key);
   final List<Widget> _widgetOptions = <Widget>[
     const HomeScreen(),
     const SearchScreen(),
-    LibraryPage(),
-    const SettingPage(),
+    const LibraryPage(),
+    SettingPage(),
   ];
-
+  final controller = Get.put(TabsController());
   DateTime? backButtonPressTime;
   Future<bool> handleWillPop(BuildContext context) async {
     final now = DateTime.now();
@@ -33,7 +32,7 @@ class TabScreen extends StatelessWidget {
     if (backButtonHasNotBeenPressedOrSnackBarHasBeenClosed) {
       backButtonPressTime = now;
       ShowSnackBar().showSnackBar(
-        'Press Back Again to Exit App',
+        'Повторите,чтобы выйти из приложения',
         duration: const Duration(seconds: 2),
         noAction: true,
       );
@@ -55,7 +54,7 @@ class TabScreen extends StatelessWidget {
           child: ValueListenableBuilder(
               valueListenable: Hive.box('settings').listenable(),
               child: GetBuilder<TabsController>(
-                init: TabsController(),
+                initState: (_) => controller.checkVersion(context),
                 builder: (controller) {
                   return IndexedStack(
                       index: controller.selectedIndex,
@@ -84,7 +83,7 @@ class TabScreen extends StatelessWidget {
               }),
         ),
       ),
-      bottomSheet: SafeArea(
+      bottomSheet: const SafeArea(
         child: MiniPlayer(),
       ),
       bottomNavigationBar: GetBuilder<TabsController>(
@@ -132,35 +131,3 @@ class TabScreen extends StatelessWidget {
     );
   }
 }
-// BottomNavigationBar(
-//             fixedColor: Colors.green,
-//             backgroundColor: Colorss.dark,
-//             unselectedItemColor: Colors.white,
-//             unselectedFontSize: 10,
-//             iconSize: 30,
-//             unselectedIconTheme: const IconThemeData(size: 28),
-//             unselectedLabelStyle: const TextStyle(color: Colors.white),
-//             selectedFontSize: 11,
-//             showUnselectedLabels: true,
-//             type: BottomNavigationBarType.fixed,
-//             items: const <BottomNavigationBarItem>[
-//               BottomNavigationBarItem(
-//                 icon: Icon(Icons.home_rounded),
-//                 label: 'Главная',
-//               ),
-//               BottomNavigationBarItem(
-//                 icon: Icon(Icons.search_rounded),
-//                 label: 'Поиск',
-//               ),
-//               BottomNavigationBarItem(
-//                 icon: Icon(Icons.library_music_rounded),
-//                 label: 'Медиатека',
-//               ),
-//               BottomNavigationBarItem(
-//                 icon: Icon(Icons.settings),
-//                 label: 'Настройки',
-//               ),
-//             ],
-//             currentIndex: controller.selectedIndex,
-//             onTap: (val) => controller.changePage(val),
-//           );

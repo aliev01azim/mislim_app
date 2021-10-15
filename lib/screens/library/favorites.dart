@@ -11,6 +11,8 @@ import '../audio_screen.dart';
 import '../category_screen.dart';
 
 class Favorites extends GetView<TabsController> {
+  const Favorites({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -44,7 +46,7 @@ class Favorites extends GetView<TabsController> {
           Favs('categories'),
           Favs('shahes'),
         ]),
-        bottomSheet: SafeArea(child: MiniPlayer()),
+        bottomSheet: const SafeArea(child: MiniPlayer()),
       ),
     );
   }

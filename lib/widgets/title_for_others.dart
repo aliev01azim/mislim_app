@@ -10,41 +10,55 @@ class TitleeForOthers extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-        valueListenable: Hive.box('favorites').listenable(),
-        builder: (_, Box box, Widget? widget) {
-          return (box.get(type == 'temi' ? 'likedCategories' : 'likedShahes',
-                          defaultValue: []) as List? ??
-                      [])
-                  .isNotEmpty
-              ? Column(
-                  children: [
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 20,
-                        ),
-                        Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.clip,
-                          style: TextStyle(
-                            fontSize: 21,
-                            fontWeight: FontWeight.w700,
-                            color: currentTheme.currentColor(),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                  ],
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                )
+        valueListenable: Hive.box('settings').listenable(),
+        builder: (_, Box show, Widget? widget) {
+          return (show.get(
+                      type == 'temi'
+                          ? 'showLikedCategories'
+                          : 'showLikedAuthors',
+                      defaultValue: true) as bool? ??
+                  true)
+              ? ValueListenableBuilder(
+                  valueListenable: Hive.box('favorites').listenable(),
+                  builder: (_, Box box, Widget? widget) {
+                    return (box.get(
+                                    type == 'temi'
+                                        ? 'likedCategories'
+                                        : 'likedShahes',
+                                    defaultValue: []) as List? ??
+                                [])
+                            .isNotEmpty
+                        ? Column(
+                            children: [
+                              const SizedBox(
+                                height: 15,
+                              ),
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 20,
+                                  ),
+                                  Text(
+                                    title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.clip,
+                                    style: TextStyle(
+                                      fontSize: 21,
+                                      fontWeight: FontWeight.w700,
+                                      color: currentTheme.currentColor(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(
+                                height: 10,
+                              ),
+                            ],
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            mainAxisSize: MainAxisSize.min,
+                          )
+                        : const SizedBox();
+                  })
               : const SizedBox();
         });
   }

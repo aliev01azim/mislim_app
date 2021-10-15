@@ -196,6 +196,8 @@ class _PlayScreenState extends State<PlayScreen> {
                                   'name': mediaItem.artist,
                                   'isFavorite': mediaItem.extras!['isFavorite']
                                 }),
+                                settings: const RouteSettings(
+                                    arguments: 'deleteRoute'),
                               ),
                             );
                           }
@@ -206,9 +208,13 @@ class _PlayScreenState extends State<PlayScreen> {
                                 builder: (context) => DetailScreen({
                                   'id': int.parse(
                                       mediaItem.extras?['categoryId']),
+                                  'image':
+                                      'http://allahakbar.pythonanywhere.com/media/akyda.jpg',
                                   'title': mediaItem.album,
                                   'isFavorite': mediaItem.extras?['isFavorite'],
                                 }),
+                                settings: const RouteSettings(
+                                    arguments: 'deleteRoute'),
                               ),
                             );
                           }
@@ -327,10 +333,9 @@ class ControlButtons extends StatelessWidget {
   final AudioPlayerHandler audioHandler;
   final bool shuffle;
   final bool miniplayer;
-
   const ControlButtons(this.audioHandler,
-      {this.shuffle = false, this.miniplayer = false});
-
+      {Key? key, this.shuffle = false, this.miniplayer = false})
+      : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -372,7 +377,7 @@ class ControlButtons extends StatelessWidget {
                           width: miniplayer ? 40.0 : 65.0,
                           child: CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
-                                Theme.of(context).accentColor),
+                                Theme.of(context).colorScheme.secondary),
                           ),
                         ),
                       ),
@@ -461,7 +466,9 @@ class NameNControls extends StatelessWidget {
   final MediaItem mediaItem;
   final bool offline;
   final audioHandler = getIt<AudioPlayerHandler>();
-  NameNControls(this.isWidthMore, this.mediaItem, {this.offline = false});
+  NameNControls(this.isWidthMore, this.mediaItem,
+      {Key? key, this.offline = false})
+      : super(key: key);
 
   Stream<Duration> get _bufferedPositionStream => audioHandler.playbackState
       .map((state) => state.bufferedPosition)
@@ -571,7 +578,7 @@ class NameNControls extends StatelessWidget {
                       return IconButton(
                         icon: shuffleModeEnabled
                             ? Icon(Icons.shuffle,
-                                color: Theme.of(context).accentColor)
+                                color: Theme.of(context).colorScheme.secondary)
                             : const Icon(
                                 Icons.shuffle,
                               ),
@@ -642,9 +649,9 @@ class NameNControls extends StatelessWidget {
                           Icons.repeat_rounded,
                         ),
                         Icon(Icons.repeat_rounded,
-                            color: Theme.of(context).accentColor),
+                            color: Theme.of(context).colorScheme.secondary),
                         Icon(Icons.repeat_one_rounded,
-                            color: Theme.of(context).accentColor),
+                            color: Theme.of(context).colorScheme.secondary),
                       ];
                       const cycleModes = [
                         AudioServiceRepeatMode.none,

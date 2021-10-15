@@ -21,7 +21,7 @@ class ListviewShaheItem extends GetView<HomeScreenController> {
       ),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 10),
-        width: 90,
+        width: 70,
         child: Stack(
           children: [
             SizedBox(

@@ -4,7 +4,6 @@ import 'package:just_audio/just_audio.dart';
 
 class BaseController {
   void handleError(error) {
-    hideLoading();
     if (error is BadRequestException) {
       var message = error.message;
       DialogHelper.showErroDialog(description: message);
@@ -13,25 +12,17 @@ class BaseController {
       DialogHelper.showErroDialog(description: message);
     } else if (error is ApiNotRespondingException) {
       DialogHelper.showErroDialog(
-          description: 'Oops! It took longer to respond.');
+          description:
+              'Для ответа сервера потребовалось больше времени! Попробуйте перезайти в приложение.');
     } else if (error is Exception) {
       DialogHelper.showErroDialog(
-          description: 'No audio source has been previously set.');
+          description: 'Аудио ранее не было настроено.');
     } else if (error is PlayerException) {
-      DialogHelper.showErroDialog(
-          description: 'The audio source was unable to be loaded.');
+      DialogHelper.showErroDialog(description: 'Не удалось загрузить аудио.');
     } else if (error is PlayerInterruptedException) {
       DialogHelper.showErroDialog(
           description:
-              'Another audio source was loaded before this call completed or the player was stopped or disposed of before the call completed.');
+              'Другое аудио было загружено до завершения этого вызова, или проигрыватель был остановлен или удален до завершения вызова.');
     }
-  }
-
-  showLoading([String? message]) {
-    DialogHelper.showLoading(message);
-  }
-
-  hideLoading() {
-    DialogHelper.hideLoading();
   }
 }

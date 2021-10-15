@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:aidar_zakaz/bindings/poisk_screen_binding.dart';
 import 'package:aidar_zakaz/controllers/home_screen_controller.dart';
 import 'package:aidar_zakaz/controllers/poisk_controller.dart';
@@ -123,61 +121,3 @@ class SearchScreen extends GetView<PoiskController> {
     );
   }
 }
-
-
-  // child: Padding(
-  //       padding: const EdgeInsets.all(8.0),
-  //       child: Stack(
-  //         children: [
-  //           Positioned(
-  //             top: 10,
-  //             left: 0,
-  //             right: 0,
-  //             child: TextField(
-  //               onTap: () {
-  //                 Get.to(() => const PoiskScreen(),
-  //                     binding: PoiskScreenBinding(),
-  //                     transition: Transition.fadeIn);
-  //               },
-  //               decoration: InputDecoration(
-  //                 hintText: 'Лекции, шейхи и категории',
-  //                 hintStyle: const TextStyle(color: Colors.black, height: 1.3),
-  //                 filled: true,
-  //                 prefixIcon: const Icon(
-  //                   Icons.search_rounded,
-  //                   color: Colors.black,
-  //                 ),
-  //                 fillColor: Colors.white.withAlpha(235),
-  //                 border: null,
-  //                 enabledBorder: InputBorder.none,
-  //                 disabledBorder: null,
-  //                 errorBorder: null,
-  //                 focusedBorder: InputBorder.none,
-  //               ),
-  //               readOnly: true,
-  //               showCursor: false,
-  //             ),
-  //           ),
-  //           GetBuilder<HomeScreenController>(
-  //             builder: (homeController) {
-  //               return Padding(
-  //                 padding: const EdgeInsets.only(top: 90),
-  //                 child: GridView.builder(
-  //                   padding: const EdgeInsets.symmetric(horizontal: 10),
-  //                   gridDelegate:
-  //                       const SliverGridDelegateWithFixedCrossAxisCount(
-  //                           crossAxisCount: 2,
-  //                           childAspectRatio: 3 / 2,
-  //                           crossAxisSpacing: 15,
-  //                           mainAxisSpacing: 15),
-  //                   itemBuilder: (context, index) =>
-  //                       LookGridItem(homeController.items[index], index),
-  //                   itemCount: homeController.items.length,
-  //                 ),
-  //               );
-  //             },
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-    

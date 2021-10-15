@@ -10,12 +10,13 @@ class SeekBar extends StatefulWidget {
   final ValueChanged<Duration>? onChangeEnd;
 
   const SeekBar({
+    Key? key,
     required this.duration,
     required this.position,
     this.bufferedPosition = Duration.zero,
     this.onChanged,
     this.onChangeEnd,
-  });
+  }) : super(key: key);
 
   @override
   _SeekBarState createState() => _SeekBarState();
@@ -52,11 +53,11 @@ class _SeekBarState extends State<SeekBar> {
           SliderTheme(
             data: _sliderThemeData.copyWith(
               thumbShape: HiddenThumbComponentShape(),
-              activeTrackColor: Theme.of(context).accentColor.withOpacity(0.5),
+              activeTrackColor:
+                  Theme.of(context).colorScheme.secondary.withOpacity(0.5),
               inactiveTrackColor:
-                  Theme.of(context).accentColor.withOpacity(0.3),
+                  Theme.of(context).colorScheme.secondary.withOpacity(0.3),
               trackHeight: 4.0,
-              // trackShape: RoundedRectSliderTrackShape(),
               trackShape: const RectangularSliderTrackShape(),
             ),
             child: ExcludeSemantics(
@@ -72,8 +73,8 @@ class _SeekBarState extends State<SeekBar> {
           SliderTheme(
             data: _sliderThemeData.copyWith(
               inactiveTrackColor: Colors.transparent,
-              activeTrackColor: Theme.of(context).accentColor,
-              thumbColor: Theme.of(context).accentColor,
+              activeTrackColor: Theme.of(context).colorScheme.secondary,
+              thumbColor: Theme.of(context).colorScheme.secondary,
               trackHeight: 4.0,
             ),
             child: Slider(

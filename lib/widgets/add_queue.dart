@@ -1,6 +1,5 @@
 import 'package:aidar_zakaz/all_about_audio/mediaitem_converter.dart';
 import 'package:aidar_zakaz/screens/audio_screen.dart';
-import 'package:aidar_zakaz/screens/tab_screen.dart';
 import 'package:aidar_zakaz/services/service_locator.dart';
 import 'package:aidar_zakaz/widgets/snackbar.dart';
 import 'package:audio_service/audio_service.dart';

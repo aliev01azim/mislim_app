@@ -8,17 +8,17 @@ class AppException implements Exception {
 
 class BadRequestException extends AppException {
   BadRequestException([String? message, String? url])
-      : super(message, 'Bad Request', url);
+      : super(message, 'Запрос отклонен.', url);
 }
 
 class FetchDataException extends AppException {
   FetchDataException([String? message, String? url])
-      : super(message, 'Unable to process', url);
+      : super(message, 'Невозможно выполнить запрос', url);
 }
 
 class ApiNotRespondingException extends AppException {
   ApiNotRespondingException([String? message, String? url])
-      : super(message, 'Api not responded in time', url);
+      : super(message, 'Сервер не ответил вовремя', url);
 }
 
 // class UnAuthorizedException extends AppException {

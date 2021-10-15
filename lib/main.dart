@@ -115,7 +115,7 @@ class App extends StatelessWidget {
                     ),
                     brightness: Brightness.light,
                     splashFactory: WaveSplash.customSplashFactory(),
-                    accentColor: currentTheme.currentColor(),
+                    primaryColor: currentTheme.currentColor(),
                   )
                 : null,
             darkTheme: (box.get('darkMode', defaultValue: true) as bool? ??
@@ -161,7 +161,7 @@ class App extends StatelessWidget {
                     ),
                     splashFactory: WaveSplash.customSplashFactory(),
                     canvasColor: currentTheme.getCanvasColor(),
-                    accentColor: currentTheme.currentColor(),
+                    primaryColor: currentTheme.currentColor(),
                   )
                 : null,
             title: 'Islamic lectures',

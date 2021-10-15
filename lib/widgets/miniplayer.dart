@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class MiniPlayer extends StatefulWidget {
+  const MiniPlayer({Key? key}) : super(key: key);
   @override
   _MiniPlayerState createState() => _MiniPlayerState();
 }
@@ -43,8 +44,8 @@ class _MiniPlayerState extends State<MiniPlayer> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           ListTile(
-                            contentPadding:
-                                const EdgeInsets.symmetric(horizontal: 12.0),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12.0, vertical: 0),
                             onTap: () {
                               Navigator.of(context).push(
                                 PageRouteBuilder(
@@ -71,19 +72,20 @@ class _MiniPlayerState extends State<MiniPlayer> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             leading: Card(
-                                elevation: 8,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(7.0)),
-                                clipBehavior: Clip.antiAlias,
-                                child: const SizedBox(
-                                  height: 50.0,
-                                  width: 50.0,
-                                  child: Image(
-                                    fit: BoxFit.cover,
-                                    image: AssetImage(
-                                        'assets/images/placeholder.jpg'),
-                                  ),
-                                )),
+                              elevation: 8,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(7.0)),
+                              clipBehavior: Clip.antiAlias,
+                              child: const SizedBox(
+                                height: 50.0,
+                                width: 50.0,
+                                child: Image(
+                                  fit: BoxFit.cover,
+                                  image: AssetImage(
+                                      'assets/images/placeholder.jpg'),
+                                ),
+                              ),
+                            ),
                             trailing: ControlButtons(
                               audioHandler,
                               miniplayer: true,
@@ -104,8 +106,9 @@ class _MiniPlayerState extends State<MiniPlayer> {
                                             data: SliderTheme.of(context)
                                                 .copyWith(
                                               trackHeight: 0.5,
-                                              thumbColor:
-                                                  Theme.of(context).accentColor,
+                                              thumbColor: Theme.of(context)
+                                                  .colorScheme
+                                                  .secondary,
                                               thumbShape:
                                                   const RoundSliderThumbShape(
                                                       enabledThumbRadius: 1.0),
@@ -133,9 +136,6 @@ class _MiniPlayerState extends State<MiniPlayer> {
                                             ),
                                           );
                               }),
-                          const SizedBox(
-                            height: 1,
-                          ),
                         ],
                       ),
                       builder: (_, Box box, Widget? widget) {

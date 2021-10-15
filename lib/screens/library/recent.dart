@@ -6,6 +6,7 @@ import 'package:hive/hive.dart';
 import '../audio_screen.dart';
 
 class RecentlyPlayed extends StatefulWidget {
+  const RecentlyPlayed({Key? key}) : super(key: key);
   @override
   _RecentlyPlayedState createState() => _RecentlyPlayedState();
 }
@@ -107,7 +108,7 @@ class _RecentlyPlayedState extends State<RecentlyPlayed> {
                         },
                       );
               }),
-      bottomSheet: SafeArea(child: MiniPlayer()),
+      bottomSheet: const SafeArea(child: MiniPlayer()),
     );
   }
 }

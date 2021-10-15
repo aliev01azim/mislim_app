@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:aidar_zakaz/screens/tab_screen.dart';
 import 'package:aidar_zakaz/widgets/snackbar.dart';
 import 'package:audiotagger/audiotagger.dart';
 import 'package:audiotagger/models/tag.dart';
@@ -89,11 +88,12 @@ class Download with ChangeNotifier {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-                insetPadding:
-                    EdgeInsets.symmetric(horizontal: 30.0, vertical: 24.0),
+                insetPadding: const EdgeInsets.symmetric(
+                    horizontal: 30.0, vertical: 24.0),
                 title: Text(
                   'Уже Скачано',
-                  style: TextStyle(color: Theme.of(context).accentColor),
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.secondary),
                 ),
                 content: Text(
                   '"${data['title']}" уже скачано.\nСкачать заново?',
@@ -109,7 +109,8 @@ class Download with ChangeNotifier {
                             return Row(
                               children: [
                                 Checkbox(
-                                  activeColor: Theme.of(context).accentColor,
+                                  activeColor:
+                                      Theme.of(context).colorScheme.secondary,
                                   value: remember.value,
                                   onChanged: (bool? value) {
                                     remember.value = value ?? false;
@@ -160,7 +161,8 @@ class Download with ChangeNotifier {
                           TextButton(
                             style: TextButton.styleFrom(
                               primary: Colors.white,
-                              backgroundColor: Theme.of(context).accentColor,
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.secondary,
                             ),
                             onPressed: () async {
                               Navigator.pop(context);

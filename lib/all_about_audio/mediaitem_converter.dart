@@ -23,24 +23,27 @@ class MediaItemConverter {
           int.parse(song['duration'].toString().split(':')[0]) * 60 +
               int.parse(song['duration'].toString().split(':')[1]);
     }
+
     return MediaItem(
-        id: song['id'].toString(),
-        album: song['album'],
-        artist: song['artist'],
-        duration: Duration(
-          seconds: int.parse(
-              (song['duration'] == null || song['duration'] == 'null')
-                  ? '180'
-                  : song['duration'].toString()),
+      id: song['id'].toString(),
+      album: song['album'],
+      artist: song['artist'],
+      duration: Duration(
+        seconds: int.parse(
+          (song['duration'] == null || song['duration'] == 'null')
+              ? '180'
+              : song['duration'].toString(),
         ),
-        title: song['title'],
-        artUri: Uri.parse(song['image'].toString()),
-        extras: {
-          'url': song['url'],
-          'isFavorite': song['isFavorite'].toString(),
-          'artistId': song['artistId'],
-          'categoryId': song['categoryId'],
-          'categoryImage': song['categoryImage'],
-        });
+      ),
+      title: song['title'],
+      artUri: Uri.parse(song['image'].toString()),
+      extras: {
+        'url': song['url'],
+        'isFavorite': song['isFavorite'].toString(),
+        'artistId': song['artistId'],
+        'categoryId': song['categoryId'],
+        'categoryImage': song['categoryImage'],
+      },
+    );
   }
 }
