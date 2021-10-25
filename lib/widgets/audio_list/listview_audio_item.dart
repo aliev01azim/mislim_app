@@ -64,7 +64,7 @@ class ListviewAudioItem extends GetView<HomeScreenController> {
                 maxLines: 2,
                 style: const TextStyle(
                   fontSize: 13,
-                  height: 1,
+                  height: 1.4,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),

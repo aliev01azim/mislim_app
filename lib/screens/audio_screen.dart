@@ -152,157 +152,153 @@ class _PlayScreenState extends State<PlayScreen> {
       onDismissed: (direction) {
         Navigator.pop(context);
       },
-      child: SafeArea(
-        child: StreamBuilder<MediaItem?>(
-            stream: audioHandler.mediaItem,
-            builder: (context, snapshot) {
-              final MediaItem? mediaItem = snapshot.data;
-              if (mediaItem == null) return const SizedBox();
-              return Scaffold(
-                appBar: AppBar(
-                  elevation: 0,
-                  backgroundColor: Colors.transparent,
-                  centerTitle: true,
-                  leading: IconButton(
-                      icon: const Icon(Icons.expand_more_rounded),
-                      color: Theme.of(context).iconTheme.color,
-                      tooltip: 'Назад',
-                      onPressed: () {
-                        Navigator.pop(context);
-                      }),
-                  actions: [
-                    if (!offline)
-                      IconButton(
-                          icon: const Icon(Icons.share_rounded),
-                          tooltip: 'Поделиться',
-                          color: Theme.of(context).iconTheme.color,
-                          onPressed: () {
-                            Share.share(mediaItem.extras!['url'].toString());
-                          }),
-                    if (!offline)
-                      PopupMenuButton(
-                        icon: Icon(
-                          Icons.more_vert_rounded,
-                          color: Theme.of(context).iconTheme.color,
-                        ),
-                        onSelected: (value) {
-                          if (value == 0) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => DetailScreen({
-                                  'id':
-                                      int.parse(mediaItem.extras!['artistId']),
-                                  'name': mediaItem.artist,
-                                  'isFavorite': mediaItem.extras!['isFavorite']
-                                }),
-                                settings: const RouteSettings(
-                                    arguments: 'deleteRoute'),
-                              ),
-                            );
-                          }
-                          if (value == 1) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => DetailScreen({
-                                  'id': int.parse(
-                                      mediaItem.extras?['categoryId']),
-                                  'image':
-                                      'http://allahakbar.pythonanywhere.com/media/akyda.jpg',
-                                  'title': mediaItem.album,
-                                  'isFavorite': mediaItem.extras?['isFavorite'],
-                                }),
-                                settings: const RouteSettings(
-                                    arguments: 'deleteRoute'),
-                              ),
-                            );
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 0,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.undo,
-                                  color: Theme.of(context).iconTheme.color,
-                                ),
-                                const SizedBox(width: 10.0),
-                                const Text('Перейти к лектору'),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 1,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.redo,
-                                  color: Theme.of(context).iconTheme.color,
-                                ),
-                                const SizedBox(width: 10.0),
-                                const Text('Перейти к теме'),
-                              ],
-                            ),
-                          ),
-                        ],
+      child: StreamBuilder<MediaItem?>(
+          stream: audioHandler.mediaItem,
+          builder: (context, snapshot) {
+            final MediaItem? mediaItem = snapshot.data;
+            if (mediaItem == null) return const SizedBox();
+            return Scaffold(
+              appBar: AppBar(
+                elevation: 0,
+                backgroundColor: Colors.transparent,
+                centerTitle: true,
+                leading: IconButton(
+                    icon: const Icon(Icons.expand_more_rounded),
+                    color: Theme.of(context).iconTheme.color,
+                    tooltip: 'Назад',
+                    onPressed: () {
+                      Navigator.pop(context);
+                    }),
+                actions: [
+                  if (!offline)
+                    IconButton(
+                        icon: const Icon(Icons.share_rounded),
+                        tooltip: 'Поделиться',
+                        color: Theme.of(context).iconTheme.color,
+                        onPressed: () {
+                          Share.share(mediaItem.extras!['url'].toString());
+                        }),
+                  if (!offline)
+                    PopupMenuButton(
+                      icon: Icon(
+                        Icons.more_vert_rounded,
+                        color: Theme.of(context).iconTheme.color,
                       ),
-                    if (offline) const SizedBox(),
-                  ],
-                ),
-                body: Builder(builder: (BuildContext context) {
-                  scaffoldContext = context;
-                  return LayoutBuilder(
-                      builder: (_, BoxConstraints constraints) {
-                    if (constraints.maxWidth > constraints.maxHeight) {
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          NameNControls(
-                            true,
-                            mediaItem,
-                            offline: offline,
-                          ),
-                        ],
-                      );
-                    }
-                    return Column(
-                      children: [
-                        // Artwork
-                        Expanded(
-                          child: Center(
-                            child: Container(
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5),
-                                color: Colors.blueGrey[700],
-                              ),
-                              height: 200,
-                              width: 200,
-                              child: Icon(
-                                Icons.headphones,
-                                color: Colors.grey[300],
-                                size: 100,
-                              ),
+                      onSelected: (value) {
+                        if (value == 0) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DetailScreen({
+                                'id': int.parse(mediaItem.extras!['artistId']),
+                                'name': mediaItem.artist,
+                                'isFavorite': mediaItem.extras!['isFavorite']
+                              }),
+                              settings:
+                                  const RouteSettings(arguments: 'deleteRoute'),
                             ),
+                          );
+                        }
+                        if (value == 1) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DetailScreen({
+                                'id':
+                                    int.parse(mediaItem.extras?['categoryId']),
+                                'image':
+                                    'http://allahakbar.pythonanywhere.com/media/akyda.jpg',
+                                'title': mediaItem.album,
+                                'isFavorite': mediaItem.extras?['isFavorite'],
+                              }),
+                              settings:
+                                  const RouteSettings(arguments: 'deleteRoute'),
+                            ),
+                          );
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 0,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.undo,
+                                color: Theme.of(context).iconTheme.color,
+                              ),
+                              const SizedBox(width: 10.0),
+                              const Text('Перейти к лектору'),
+                            ],
                           ),
                         ),
-
-                        Expanded(
-                          child: NameNControls(
-                            false,
-                            mediaItem,
-                            offline: offline,
+                        PopupMenuItem(
+                          value: 1,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.redo,
+                                color: Theme.of(context).iconTheme.color,
+                              ),
+                              const SizedBox(width: 10.0),
+                              const Text('Перейти к теме'),
+                            ],
                           ),
                         ),
                       ],
+                    ),
+                  if (offline) const SizedBox(),
+                ],
+              ),
+              body: Builder(builder: (BuildContext context) {
+                scaffoldContext = context;
+                return LayoutBuilder(builder: (_, BoxConstraints constraints) {
+                  if (constraints.maxWidth > constraints.maxHeight) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        NameNControls(
+                          true,
+                          mediaItem,
+                          offline: offline,
+                        ),
+                      ],
                     );
-                  });
-                }),
-              );
-            }),
-      ),
+                  }
+                  return Column(
+                    children: [
+                      // Artwork
+                      Expanded(
+                        child: Center(
+                          child: Container(
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5),
+                              color: Colors.blueGrey[700],
+                            ),
+                            height: 200,
+                            width: 200,
+                            child: Icon(
+                              Icons.headphones,
+                              color: Colors.grey[300],
+                              size: 100,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      Expanded(
+                        child: NameNControls(
+                          false,
+                          mediaItem,
+                          offline: offline,
+                        ),
+                      ),
+                    ],
+                  );
+                });
+              }),
+            );
+          }),
     );
   }
 }

@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../audio_screen.dart';
 
@@ -56,9 +57,11 @@ class _DownloadedSongsState extends State<DownloadedSongs>
   }
 
   Future<void> getCached() async {
-    var downloadPath = await ExtStorage.getExternalStoragePublicDirectory(
-            ExtStorage.DIRECTORY_MUSIC) ??
-        '/storage/emulated/0/Music';
+    var downloadPath = Platform.isAndroid
+        ? await ExtStorage.getExternalStoragePublicDirectory(
+                ExtStorage.DIRECTORY_MUSIC) ??
+            '/storage/emulated/0/Music'
+        : (await getApplicationDocumentsDirectory()).path;
     var path = Hive.box('settings')
         .get('downloadPath', defaultValue: downloadPath) as String;
     await requestPermission();

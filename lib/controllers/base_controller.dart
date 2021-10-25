@@ -16,7 +16,7 @@ class BaseController {
               'Для ответа сервера потребовалось больше времени! Попробуйте перезайти в приложение.');
     } else if (error is Exception) {
       DialogHelper.showErroDialog(
-          description: 'Аудио ранее не было настроено.');
+          description: 'Попробуйте перезайти в приложение.');
     } else if (error is PlayerException) {
       DialogHelper.showErroDialog(description: 'Не удалось загрузить аудио.');
     } else if (error is PlayerInterruptedException) {
